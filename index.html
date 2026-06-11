@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>定时清理工具 - 添加策略详情</title>
+<style>
+  :root {
+    --primary: #1677ff;
+    --primary-hover: #4096ff;
+    --primary-bg: #f0f5ff;
+    --primary-light: #e6f4ff;
+    --success: #52c41a;
+    --danger: #ff4d4f;
+    --danger-hover: #ff7875;
+    --warning: #faad14;
+    --text: #1f1f1f;
+    --text-secondary: #595959;
+    --text-muted: #8c8c8c;
+    --text-placeholder: #bfbfbf;
+    --border: #d9d9d9;
+    --border-light: #f0f0f0;
+    --bg-page: #f5f7fa;
+    --bg-white: #ffffff;
+    --bg-section: #ffffff;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-xl: 0 8px 32px rgba(0,0,0,0.12);
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg-page);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ==================== TOP NAV ==================== */
+  .top-nav {
+    background: var(--bg-white);
+    border-bottom: 1px solid var(--border-light);
+    padding: 0 28px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .top-nav-left { display: flex; align-items: center; gap: 4px; }
+  .nav-item {
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition);
+    user-select: none;
+  }
+  .nav-item:hover { color: var(--primary); background: var(--primary-bg); }
+  .nav-item.active {
+    color: var(--primary);
+    font-weight: 600;
+    background: var(--primary-light);
+  }
+  .nav-item .close-x {
+    font-size: 14px; margin-left: 4px;
+    opacity: 0.5; width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; transition: all var(--transition);
+  }
+  .nav-item .close-x:hover { opacity: 1; background: rgba(0,0,0,0.06); }
+  .top-nav-right { display: flex; align-items: center; gap: 14px; }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #69b1ff);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 2px 6px rgba(22,119,255,0.3);
+  }
+  .user-name { color: var(--text); font-size: 14px; font-weight: 500; }
+
+  /* ==================== PAGE HEADER ==================== */
+  .page-header {
+    background: var(--bg-white);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+  }
+  .page-header-left { display: flex; align-items: center; gap: 16px; }
+  .back-btn {
+    color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; gap: 6px; font-size: 14px;
+    padding: 6px 12px; border-radius: var(--radius-sm);
+    transition: all var(--transition);
+  }
+  .back-btn:hover { color: var(--primary); background: var(--primary-bg); }
+  .page-title { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+  .page-actions { display: flex; gap: 12px; }
+
+  /* ==================== BUTTONS ==================== */
+  .btn {
+    padding: 8px 22px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg-white); color: var(--text-secondary);
+    transition: all var(--transition);
+    user-select: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    line-height: 1.4;
+  }
+  .btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-bg);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn:active { transform: translateY(0); box-shadow: none; }
+  .btn-primary {
+    background: var(--primary); color: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 2px 6px rgba(22,119,255,0.3);
+  }
+  .btn-primary:hover {
+    background: var(--primary-hover); border-color: var(--primary-hover);
+    color: #fff; box-shadow: 0 4px 12px rgba(22,119,255,0.4);
+  }
+  .btn-primary:active { box-shadow: 0 1px 3px rgba(22,119,255,0.3); }
+  .btn-text {
+    background: none; border: none; color: var(--primary);
+    padding: 6px 8px; font-size: 14px; cursor: pointer;
+    border-radius: var(--radius-sm); transition: all var(--transition);
+  }
+  .btn-text:hover { background: var(--primary-bg); }
+  .btn-text.danger { color: var(--danger); }
+  .btn-text.danger:hover { background: #fff1f0; }
+
+  /* ==================== MAIN CONTENT ==================== */
+  .main-content {
+    padding: 28px 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ==================== SECTION CARD ==================== */
+  .section {
+    background: var(--bg-section);
+    border-radius: var(--radius-lg);
+    margin-bottom: 20px;
+    padding: 28px 32px 24px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: box-shadow var(--transition);
+  }
+  .section:hover { box-shadow: var(--shadow-lg); }
+  .section-title {
+    font-size: 16px; font-weight: 700; color: var(--text);
+    margin-bottom: 24px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::before {
+    content: "";
+    width: 4px; height: 20px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ==================== FORM ==================== */
+  .form-item {
+    display: flex; align-items: flex-start;
+    margin-bottom: 20px;
+    min-height: 36px;
+  }
+  .form-item:last-child { margin-bottom: 0; }
+  .form-label {
+    width: 130px; text-align: right; padding-right: 16px;
+    color: var(--text-secondary); font-size: 14px;
+    line-height: 36px; flex-shrink: 0;
+    white-space: nowrap; font-weight: 500;
+  }
+  .form-label.required::before {
+    content: "*"; color: var(--danger); margin-right: 4px;
+    font-weight: 700; font-size: 15px;
+  }
+  .form-control { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+
+  /* Input */
+  .input {
+    height: 36px; padding: 6px 14px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 14px; color: var(--text); outline: none;
+    transition: all var(--transition);
+    background: var(--bg-white);
+    width: 340px;
+  }
+  .input:hover { border-color: var(--primary-hover); }
+  .input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
+  }
+  .input::placeholder { color: var(--text-placeholder); }
+  .input-sm { width: 90px; }
+
+  /* ==================== RADIO & CHECKBOX ==================== */
+  .radio-group, .checkbox-group {
+    display: flex; align-items: center; gap: 28px;
+    flex-wrap: wrap; min-height: 36px;
+    padding-top: 6px;
+  }
+  .radio-item, .checkbox-item {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; color: var(--text);
+    font-size: 14px;
+    padding: 4px 0;
+    user-select: none;
+  }
+  .radio-item input[type="radio"],
+  .checkbox-item input[type="checkbox"] {
+    width: 16px; height: 16px; cursor: pointer;
+    accent-color: var(--primary);
+    flex-shrink: 0;
+  }
+  .radio-label-with-hint {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  /* ==================== SELECT ==================== */
+  .select-wrapper { position: relative; display: inline-block; }
+  .select {
+    width: 220px; height: 36px; padding: 6px 32px 6px 14px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 14px; color: var(--text); background: var(--bg-white);
+    cursor: pointer; appearance: none; outline: none;
+    transition: all var(--transition);
+  }
+  .select:hover { border-color: var(--primary-hover); }
+  .select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
+  }
+  .select-arrow {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%); pointer-events: none;
+    color: var(--text-muted); font-size: 11px;
+  }
+
+  /* ==================== TABLE ==================== */
+  .table-toolbar {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 12px;
+  }
+  .link-btn {
+    color: var(--primary); cursor: pointer; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-weight: 500; padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition);
+    user-select: none;
+  }
+  .link-btn:hover { background: var(--primary-bg); text-decoration: none; }
+  .link-btn.danger { color: var(--danger); }
+  .link-btn.danger:hover { background: #fff1f0; }
+  .table-wrapper {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td {
+    padding: 12px 18px; text-align: left;
+    border-bottom: 1px solid var(--border-light);
+  }
+  th {
+    background: #fafbfc; font-weight: 600;
+    color: var(--text-secondary); font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: #f8faff; }
+  .table-empty {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-muted); font-size: 14px;
+  }
+  .delete-link {
+    color: var(--danger); cursor: pointer; font-size: 13px;
+    font-weight: 500; padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition);
+  }
+  .delete-link:hover { background: #fff1f0; text-decoration: none; }
+
+  /* ==================== TIME INPUT ==================== */
+  .time-native {
+    height: 36px; padding: 6px 14px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 14px; color: var(--text); outline: none;
+    cursor: pointer; transition: all var(--transition);
+    background: var(--bg-white);
+  }
+  .time-native:hover { border-color: var(--primary-hover); }
+  .time-native:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
+  }
+  .time-hint {
+    color: var(--text-muted); font-size: 12px;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* ==================== SWITCH ==================== */
+  .switch-wrapper {
+    display: flex; align-items: center; gap: 14px;
+    flex-wrap: wrap; padding-top: 6px;
+  }
+  .switch {
+    position: relative; width: 48px; height: 24px;
+    background: #d9d9d9; border-radius: 12px;
+    cursor: pointer; transition: background var(--transition);
+    flex-shrink: 0;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .switch.active { background: var(--primary); }
+  .switch::after {
+    content: "";
+    position: absolute;
+    width: 20px; height: 20px; background: #fff;
+    border-radius: 50%;
+    top: 2px; left: 2px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .switch.active::after { transform: translateX(24px); }
+  .switch-label {
+    color: var(--text-secondary); font-size: 14px;
+    font-weight: 500; min-width: 48px;
+  }
+  .switch-hint {
+    color: var(--text-muted); font-size: 12px;
+    width: 100%; margin-top: 2px;
+    line-height: 1.5;
+  }
+
+  /* Loop inline */
+  .loop-inline {
+    display: none;
+    align-items: center; gap: 6px;
+    font-size: 14px; color: var(--text);
+    font-weight: 500;
+  }
+  .loop-inline.show { display: inline-flex; }
+  .loop-inline .loop-days-input {
+    width: 52px; height: 30px;
+    text-align: center;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 14px; outline: none;
+    transition: all var(--transition);
+    background: var(--bg-white);
+  }
+  .loop-inline .loop-days-input:hover { border-color: var(--primary-hover); }
+  .loop-inline .loop-days-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
+  }
+
+  /* ==================== HINT ICON ==================== */
+  .hint-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    color: var(--text-muted);
+    font-size: 11px; font-weight: 700;
+    cursor: help;
+    position: relative;
+    flex-shrink: 0;
+    transition: all var(--transition);
+    user-select: none;
+    vertical-align: middle;
+    margin-left: 6px;
+    line-height: 1;
+  }
+  .hint-icon:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+  .hint-icon::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    color: #fff; padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px; line-height: 1.6;
+    white-space: normal;
+    min-width: 220px; max-width: 340px;
+    z-index: 999; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s;
+    font-weight: normal;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .hint-icon:hover::after { opacity: 1; }
+  .hint-icon::before {
+    content: "";
+    position: absolute; bottom: calc(100% + 3px);
+    left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0,0,0,0.85);
+    z-index: 999; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .hint-icon:hover::before { opacity: 1; }
+
+  /* ==================== MODAL ==================== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg-white); border-radius: var(--radius-lg);
+    width: 540px; max-width: 92vw; max-height: 80vh;
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow-xl);
+    animation: modalIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fafbfc;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--text); }
+  .modal-close {
+    cursor: pointer; color: var(--text-muted); font-size: 20px;
+    width: 32px; height: 32px; display: flex;
+    align-items: center; justify-content: center;
+    border-radius: var(--radius-sm); transition: all var(--transition);
+  }
+  .modal-close:hover { color: var(--text); background: var(--border-light); }
+  .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-light);
+    display: flex; justify-content: flex-end; gap: 12px;
+    background: #fafbfc;
+  }
+
+  /* Account selector */
+  .account-search { display: flex; gap: 10px; margin-bottom: 16px; }
+  .account-search input {
+    flex: 1; height: 36px; padding: 6px 14px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    outline: none; font-size: 14px;
+    transition: all var(--transition);
+  }
+  .account-search input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
+  }
+  .account-list { max-height: 320px; overflow-y: auto; }
+  .account-list-item {
+    display: flex; align-items: center; padding: 12px 14px;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer; gap: 12px;
+    transition: background var(--transition);
+    border-radius: var(--radius-sm);
+    margin-bottom: 2px;
+  }
+  .account-list-item:hover { background: var(--primary-bg); }
+  .account-list-item input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: var(--primary);
+    flex-shrink: 0; cursor: pointer;
+  }
+  .account-info { flex: 1; }
+  .account-name { font-size: 14px; color: var(--text); font-weight: 500; }
+  .account-id { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ==================== TOAST ==================== */
+  .toast-container {
+    position: fixed; top: 24px; left: 50%;
+    transform: translateX(-50%); z-index: 2000;
+    display: flex; flex-direction: column; gap: 10px;
+    pointer-events: none;
+  }
+  .toast {
+    padding: 12px 24px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500;
+    color: #fff;
+    animation: toastIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-lg);
+    pointer-events: auto;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+  .toast.info { background: var(--primary); }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ==================== MISC ==================== */
+  .text-muted { color: var(--text-muted); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #bfbfbf; }
+
+  /* Focus visible for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Top Navigation -->
+<div class="top-nav">
+  <div class="top-nav-left">
+    <div class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      首页
+    </div>
+    <div class="nav-item active">
+      定时清理工具
+      <span class="close-x">×</span>
+    </div>
+  </div>
+  <div class="top-nav-right">
+    <div class="user-avatar">杨</div>
+    <span class="user-name">杨鑫 您好，欢迎使用</span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="cursor:pointer;color:var(--text-muted);transition:color 0.2s" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+  </div>
+</div>
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="back-btn" onclick="goBack()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg>
+      返回
+    </div>
+    <h1 class="page-title">添加策略详情</h1>
+  </div>
+  <div class="page-actions">
+    <button class="btn" onclick="cancelForm()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      取消
+    </button>
+    <button class="btn btn-primary" onclick="saveStrategy()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      保存策略
+    </button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+  <!-- 基础信息 -->
+  <div class="section">
+    <div class="section-title">基础信息</div>
+
+    <div class="form-item">
+      <label class="form-label">策略名称</label>
+      <div class="form-control" style="justify-content:center">
+        <input type="text" class="input" id="strategyName" placeholder="请输入策略名称..." style="width:100%;max-width:480px">
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="form-label required">渠道类型</label>
+      <div class="form-control" style="justify-content:center">
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="channel" value="guangdiantong" checked>
+            广点通
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="form-label">选择账号集</label>
+      <div class="form-control">
+        <div class="table-toolbar">
+          <span class="link-btn" onclick="openAccountModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            添加账号集 (<span id="accountCount">1</span>)
+          </span>
+          <span class="link-btn danger" onclick="clearAllAccounts()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            全部删除
+          </span>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:60px">序号</th>
+                <th>账号集名称</th>
+                <th>账号集ID</th>
+                <th style="width:80px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="accountTableBody">
+              <tr data-id="ZHJ010387">
+                <td>1</td>
+                <td>[tpx]-江西电信-1</td>
+                <td>ZHJ010387</td>
+                <td><span class="delete-link" onclick="deleteAccount('ZHJ010387')">删除</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 属性配置 -->
+  <div class="section">
+    <div class="section-title">属性配置</div>
+
+    <div class="form-item">
+      <label class="form-label required">
+        项目状态
+        <span class="hint-icon" data-tip="项目对应广点通单元层级">?</span>
+      </label>
+      <div class="form-control" style="justify-content:center">
+        <div class="select-wrapper" style="width:100%;max-width:480px">
+          <select class="select" id="projectStatus" style="width:100%">
+            <option value="">请选择项目状态</option>
+            <option value="active">投放中</option>
+            <option value="paused">已暂停</option>
+            <option value="ended">已结束</option>
+          </select>
+          <span class="select-arrow">▼</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="form-label required">
+        广告状态
+        <span class="hint-icon" data-tip="广告对应广点通创意层级">?</span>
+      </label>
+      <div class="form-control" style="justify-content:center">
+        <div class="radio-group" style="width:100%;max-width:480px">
+          <label class="radio-item">
+            <input type="radio" name="adStatus" value="repeat" checked>
+            <span class="radio-label-with-hint">
+              重复投放
+              <span class="hint-icon" data-tip="媒体标识&quot;重复投放&quot;的广告">?</span>
+            </span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="adStatus" value="rejected">
+            <span class="radio-label-with-hint">
+              审核不通过
+              <span class="hint-icon" data-tip="媒体标识&quot;审核不通过&quot;的广告">?</span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="form-label required">广告创建时间</label>
+      <div class="form-control" style="justify-content:center">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;max-width:480px">
+          <span style="color:var(--text-secondary)">小于</span>
+          <input type="number" class="input input-sm" id="createTime" placeholder="请输入" min="0" style="width:100px">
+          <span style="color:var(--text-secondary)">小时不执行操作</span>
+          <span class="hint-icon" data-tip="创建时间小于该值时不执行清理操作">?</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作配置 -->
+  <div class="section">
+    <div class="section-title">操作配置</div>
+
+    <div class="form-item">
+      <label class="form-label required">操作类型</label>
+      <div class="form-control" style="justify-content:center">
+        <div class="select-wrapper" style="width:100%;max-width:480px">
+          <select class="select" id="opType" style="width:100%">
+            <option value="delete">删除</option>
+            <option value="pause">暂停</option>
+          </select>
+          <span class="select-arrow">▼</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="form-label">
+        定时执行
+        <span class="hint-icon" data-tip="定时删除配置时间早于策略创建时间，则次日开始执行">?</span>
+      </label>
+      <div class="form-control" style="justify-content:center">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%;max-width:480px">
+          <input type="time" class="time-native" id="scheduleTime" value="02:00">
+          <span class="time-hint">策略每日定时执行时间</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="form-label">
+        循环执行
+        <span class="hint-icon" data-tip="配置x天循环，代表从首次执行日算起，每隔x天执行一次该策略；循环开关关闭，该策略仅执行一次">?</span>
+      </label>
+      <div class="form-control" style="justify-content:center">
+        <div class="switch-wrapper" style="width:100%;max-width:480px">
+          <div class="switch" id="loopSwitch" onclick="toggleLoop()"></div>
+          <span class="switch-label" id="loopLabel">未开启</span>
+          <div class="loop-inline" id="loopInline">
+            <span style="color:var(--text-secondary)">，每</span>
+            <input type="number" class="loop-days-input" id="loopDays" value="1" min="1" max="365">
+            <span style="color:var(--text-secondary)">天循环执行</span>
+          </div>
+        </div>
+        <div class="switch-hint" id="loopHint">开启后按设定天数循环执行，关闭则仅执行一次</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Account Selection Modal -->
+<div class="modal-overlay" id="accountModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">选择账号集</span>
+      <span class="modal-close" onclick="closeAccountModal()">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="account-search">
+        <input type="text" id="accountSearch" placeholder="搜索账号集名称或ID..." oninput="filterAccounts()">
+      </div>
+      <div class="account-list" id="accountList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAccountModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmAddAccounts()">确定添加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== DATA =====================
+const allAccounts = [
+  { id: 'ZHJ010387', name: '[tpx]-江西电信-1', checked: true },
+  { id: 'ZHJ010388', name: '[tpx]-江西电信-2', checked: false },
+  { id: 'ZHJ010389', name: '[tpx]-江西移动-1', checked: false },
+  { id: 'ZHJ010390', name: '[tpx]-江西联通-1', checked: false },
+  { id: 'ZHJ010391', name: '[tpx]-广东电信-1', checked: false },
+  { id: 'ZHJ010392', name: '[tpx]-广东移动-1', checked: false },
+  { id: 'ZHJ010393', name: '[tpx]-浙江电信-1', checked: false },
+  { id: 'ZHJ010394', name: '[tpx]-浙江移动-1', checked: false },
+];
+
+let selectedAccounts = allAccounts.filter(a => a.checked);
+
+// ===================== TOAST =====================
+function showToast(message, type) {
+  type = type || 'info';
+  var container = document.getElementById('toastContainer');
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+
+  // Add icon based on type
+  var icon = '';
+  if (type === 'success') icon = '✓ ';
+  else if (type === 'error') icon = '✕ ';
+  else if (type === 'info') icon = 'ℹ ';
+  toast.textContent = icon + message;
+
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-10px) scale(0.95)';
+    toast.style.transition = 'all 0.3s';
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 2500);
+}
+
+// ===================== ACCOUNT TABLE =====================
+function renderAccountTable() {
+  var tbody = document.getElementById('accountTableBody');
+  var countSpan = document.getElementById('accountCount');
+  countSpan.textContent = selectedAccounts.length;
+
+  if (selectedAccounts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="table-empty">暂无账号集，请点击"添加账号集"按钮选择</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = selectedAccounts.map(function(acc, idx) {
+    return '<tr data-id="' + acc.id + '">' +
+      '<td>' + (idx + 1) + '</td>' +
+      '<td>' + acc.name + '</td>' +
+      '<td>' + acc.id + '</td>' +
+      '<td><span class="delete-link" onclick="deleteAccount(\'' + acc.id + '\')">删除</span></td>' +
+    '</tr>';
+  }).join('');
+}
+
+function deleteAccount(id) {
+  selectedAccounts = selectedAccounts.filter(function(a) { return a.id !== id; });
+  renderAccountTable();
+  showToast('已删除账号集', 'info');
+}
+
+function clearAllAccounts() {
+  if (selectedAccounts.length === 0) return;
+  if (confirm('确定要删除所有已选账号集吗？')) {
+    selectedAccounts = [];
+    renderAccountTable();
+    showToast('已清空所有账号集', 'info');
+  }
+}
+
+// ===================== MODAL =====================
+function openAccountModal() {
+  document.getElementById('accountModal').classList.add('show');
+  renderAccountList();
+  document.getElementById('accountSearch').value = '';
+}
+
+function closeAccountModal() {
+  document.getElementById('accountModal').classList.remove('show');
+}
+
+function renderAccountList() {
+  var list = document.getElementById('accountList');
+  var search = document.getElementById('accountSearch').value.toLowerCase();
+  var filtered = allAccounts.filter(function(a) {
+    if (selectedAccounts.find(function(sa) { return sa.id === a.id; })) return false;
+    var s = search;
+    return a.name.toLowerCase().indexOf(s) !== -1 || a.id.toLowerCase().indexOf(s) !== -1;
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="table-empty">没有可添加的账号集</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(function(acc) {
+    return '<div class="account-list-item" onclick="toggleAccountCheckbox(\'' + acc.id + '\')">' +
+      '<input type="checkbox" id="cb-' + acc.id + '" data-id="' + acc.id + '">' +
+      '<div class="account-info">' +
+        '<div class="account-name">' + acc.name + '</div>' +
+        '<div class="account-id">' + acc.id + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleAccountCheckbox(id) {
+  var cb = document.getElementById('cb-' + id);
+  if (cb) cb.checked = !cb.checked;
+}
+
+function filterAccounts() {
+  renderAccountList();
+}
+
+function confirmAddAccounts() {
+  var checkboxes = document.querySelectorAll('#accountList input[type="checkbox"]:checked');
+  checkboxes.forEach(function(cb) {
+    var id = cb.dataset.id;
+    var acc = allAccounts.find(function(a) { return a.id === id; });
+    if (acc && !selectedAccounts.find(function(sa) { return sa.id === id; })) {
+      selectedAccounts.push(acc);
+    }
+  });
+  renderAccountTable();
+  closeAccountModal();
+  if (checkboxes.length > 0) {
+    showToast('成功添加 ' + checkboxes.length + ' 个账号集', 'success');
+  }
+}
+
+// ===================== LOOP SWITCH =====================
+function toggleLoop() {
+  var sw = document.getElementById('loopSwitch');
+  var inline = document.getElementById('loopInline');
+  var label = document.getElementById('loopLabel');
+  var hint = document.getElementById('loopHint');
+
+  sw.classList.toggle('active');
+
+  if (sw.classList.contains('active')) {
+    inline.classList.add('show');
+    var days = document.getElementById('loopDays').value || 1;
+    label.textContent = '已开启';
+    hint.textContent = '从首次执行日算起，每隔 ' + days + ' 天执行一次';
+  } else {
+    inline.classList.remove('show');
+    label.textContent = '未开启';
+    hint.textContent = '开启后按设定天数循环执行，关闭则仅执行一次';
+  }
+}
+
+// Update inline text when loop days changes
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'loopDays') {
+    var sw = document.getElementById('loopSwitch');
+    var hint = document.getElementById('loopHint');
+    var days = e.target.value || 1;
+    if (sw.classList.contains('active')) {
+      hint.textContent = '从首次执行日算起，每隔 ' + days + ' 天执行一次';
+    }
+  }
+});
+
+// ===================== SAVE / CANCEL =====================
+function goBack() {
+  showToast('返回策略列表', 'info');
+}
+
+function cancelForm() {
+  if (confirm('确定要取消吗？未保存的内容将丢失。')) {
+    showToast('已取消编辑', 'info');
+    document.getElementById('strategyName').value = '';
+    document.getElementById('projectStatus').value = '';
+    document.getElementById('createTime').value = '';
+    document.getElementById('scheduleTime').value = '02:00';
+    selectedAccounts = [];
+    renderAccountTable();
+
+    var sw = document.getElementById('loopSwitch');
+    sw.classList.remove('active');
+    document.getElementById('loopInline').classList.remove('show');
+    document.getElementById('loopLabel').textContent = '未开启';
+    document.getElementById('loopHint').textContent = '开启后按设定天数循环执行，关闭则仅执行一次';
+    document.getElementById('loopDays').value = 1;
+  }
+}
+
+function saveStrategy() {
+  var name = document.getElementById('strategyName').value.trim();
+  var projectStatus = document.getElementById('projectStatus').value;
+  var createTime = document.getElementById('createTime').value;
+  var adStatus = document.querySelector('input[name="adStatus"]:checked').value;
+  var opType = document.getElementById('opType').value;
+  var scheduleTime = document.getElementById('scheduleTime').value;
+  var loopActive = document.getElementById('loopSwitch').classList.contains('active');
+  var loopDays = document.getElementById('loopDays').value || 1;
+
+  if (!name) {
+    showToast('请输入策略名称', 'error');
+    document.getElementById('strategyName').focus();
+    return;
+  }
+  if (!projectStatus) {
+    showToast('请选择项目状态', 'error');
+    document.getElementById('projectStatus').focus();
+    return;
+  }
+  if (selectedAccounts.length === 0) {
+    showToast('请至少选择一个账号集', 'error');
+    return;
+  }
+  if (!createTime) {
+    showToast('请输入广告创建时间阈值', 'error');
+    document.getElementById('createTime').focus();
+    return;
+  }
+
+  var data = {
+    name: name,
+    channel: '广点通',
+    accounts: selectedAccounts,
+    projectStatus: document.getElementById('projectStatus').selectedOptions[0].text,
+    adStatus: adStatus === 'repeat' ? '重复投放' : '审核不通过',
+    createTimeThreshold: createTime + '小时',
+    opType: opType === 'delete' ? '删除' : '暂停',
+    schedule: scheduleTime,
+    loop: loopActive ? '每' + loopDays + '天循环执行' : '仅执行一次',
+  };
+
+  console.log('保存策略:', data);
+  showToast('策略「' + name + '」保存成功！', 'success');
+}
+
+// ===================== INIT =====================
+renderAccountTable();
+
+// Close modal on overlay click
+document.getElementById('accountModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAccountModal();
+});
+</script>
+
+</body>
+</html>
