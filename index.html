@@ -244,7 +244,7 @@
     display: inline-flex; align-items: center; gap: 6px;
   }
 
-  /* ==================== SELECT ==================== */
+  /* ==================== SELECT (multi) ==================== */
   .select-wrapper { position: relative; display: inline-block; }
   .select {
     width: 220px; height: 36px; padding: 6px 32px 6px 14px;
@@ -262,6 +262,19 @@
     position: absolute; right: 12px; top: 50%;
     transform: translateY(-50%); pointer-events: none;
     color: var(--text-muted); font-size: 11px;
+  }
+
+  /* Multi-select checkbox group (for project status) */
+  .checkbox-group-wrap {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 12px 16px;
+    background: #fafbfc;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    max-width: 480px;
+  }
+  .checkbox-group-wrap .checkbox-item {
+    padding: 2px 0;
   }
 
   /* ==================== TABLE ==================== */
@@ -530,6 +543,15 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
+  /* ==================== COLLAPSE / EXPAND ==================== */
+  .collapse-enter {
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease, padding 0.3s ease;
+  }
+  .collapse-enter.show {
+    max-height: 200px; opacity: 1;
+  }
+
   /* ==================== MISC ==================== */
   .text-muted { color: var(--text-muted); }
 
@@ -658,25 +680,35 @@
   <div class="section">
     <div class="section-title">属性配置</div>
 
+    <!-- 项目状态 - 多选复选框 -->
     <div class="form-item">
       <label class="form-label required">
         项目状态
-        <span class="hint-icon" data-tip="项目对应广点通单元层级">?</span>
+        <span class="hint-icon" data-tip="项目对应广点通单元层级，支持多选">?</span>
       </label>
       <div class="form-control" style="justify-content:center">
-        <div class="select-wrapper" style="width:100%;max-width:480px">
-          <select class="select" id="projectStatus" style="width:100%">
-            <option value="">请选择项目状态</option>
-            <option value="active">投放中</option>
-            <option value="partial">部分投放中</option>
-            <option value="not_started">未到投放时间</option>
-            <option value="paused">暂停中</option>
-          </select>
-          <span class="select-arrow">▼</span>
+        <div class="checkbox-group-wrap" id="projectStatusGroup">
+          <label class="checkbox-item">
+            <input type="checkbox" name="projectStatus" value="active" checked>
+            投放中
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="projectStatus" value="partial">
+            部分投放中
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="projectStatus" value="not_started">
+            未到投放时间
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="projectStatus" value="paused">
+            暂停中
+          </label>
         </div>
       </div>
     </div>
 
+    <!-- 广告状态 -->
     <div class="form-item">
       <label class="form-label required">
         广告状态
@@ -685,18 +717,38 @@
       <div class="form-control" style="justify-content:center">
         <div class="radio-group" style="width:100%;max-width:480px">
           <label class="radio-item">
-            <input type="radio" name="adStatus" value="repeat" checked>
+            <input type="radio" name="adStatus" value="repeat" checked onchange="onAdStatusChange()">
             <span class="radio-label-with-hint">
               重复投放
               <span class="hint-icon" data-tip="媒体标识&quot;重复投放&quot;的广告">?</span>
             </span>
           </label>
           <label class="radio-item">
-            <input type="radio" name="adStatus" value="rejected">
+            <input type="radio" name="adStatus" value="rejected" onchange="onAdStatusChange()">
             <span class="radio-label-with-hint">
               审核不通过
               <span class="hint-icon" data-tip="媒体标识&quot;审核不通过&quot;的广告">?</span>
             </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 拒审组件类型 - 动态显示 -->
+    <div class="form-item" id="rejectTypeItem" style="display:none;overflow:hidden;transition:all 0.3s ease">
+      <label class="form-label required">
+        拒审组件类型
+        <span class="hint-icon" data-tip="选择广告被拒审的组件类型">?</span>
+      </label>
+      <div class="form-control" style="justify-content:center">
+        <div class="checkbox-group-wrap" id="rejectTypeGroup">
+          <label class="checkbox-item">
+            <input type="checkbox" name="rejectType" value="image">
+            图片拒审
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="rejectType" value="video">
+            视频拒审
           </label>
         </div>
       </div>
@@ -802,6 +854,25 @@ const allAccounts = [
 
 let selectedAccounts = allAccounts.filter(a => a.checked);
 
+// ===================== AD STATUS CHANGE =====================
+function onAdStatusChange() {
+  var rejectedRadio = document.querySelector('input[name="adStatus"][value="rejected"]');
+  var rejectItem = document.getElementById('rejectTypeItem');
+
+  if (rejectedRadio.checked) {
+    // Show with animation
+    rejectItem.style.display = 'flex';
+    setTimeout(function() { rejectItem.style.opacity = '1'; rejectItem.style.maxHeight = '100px'; }, 10);
+  } else {
+    // Hide with animation
+    rejectItem.style.opacity = '0';
+    rejectItem.style.maxHeight = '0';
+    setTimeout(function() { rejectItem.style.display = 'none'; }, 300);
+    // Clear selections
+    document.querySelectorAll('input[name="rejectType"]').forEach(function(cb) { cb.checked = false; });
+  }
+}
+
 // ===================== TOAST =====================
 function showToast(message, type) {
   type = type || 'info';
@@ -809,7 +880,6 @@ function showToast(message, type) {
   var toast = document.createElement('div');
   toast.className = 'toast ' + type;
 
-  // Add icon based on type
   var icon = '';
   if (type === 'success') icon = '✓ ';
   else if (type === 'error') icon = '✕ ';
@@ -955,6 +1025,18 @@ document.addEventListener('input', function(e) {
   }
 });
 
+// ===================== GET SELECTED PROJECT STATUS =====================
+function getSelectedProjectStatus() {
+  var checked = document.querySelectorAll('input[name="projectStatus"]:checked');
+  return Array.from(checked).map(function(cb) { return cb.value; });
+}
+
+// ===================== GET SELECTED REJECT TYPES =====================
+function getSelectedRejectTypes() {
+  var checked = document.querySelectorAll('input[name="rejectType"]:checked');
+  return Array.from(checked).map(function(cb) { return cb.value; });
+}
+
 // ===================== SAVE / CANCEL =====================
 function goBack() {
   showToast('返回策略列表', 'info');
@@ -964,7 +1046,9 @@ function cancelForm() {
   if (confirm('确定要取消吗？未保存的内容将丢失。')) {
     showToast('已取消编辑', 'info');
     document.getElementById('strategyName').value = '';
-    document.getElementById('projectStatus').value = '';
+    document.querySelectorAll('input[name="projectStatus"]').forEach(function(cb) { cb.checked = false; });
+    document.querySelector('input[name="adStatus"][value="repeat"]').checked = true;
+    document.getElementById('rejectTypeItem').style.display = 'none';
     document.getElementById('createTime').value = '';
     document.getElementById('scheduleTime').value = '02:00';
     selectedAccounts = [];
@@ -981,9 +1065,9 @@ function cancelForm() {
 
 function saveStrategy() {
   var name = document.getElementById('strategyName').value.trim();
-  var projectStatus = document.getElementById('projectStatus').value;
-  var createTime = document.getElementById('createTime').value;
+  var projectStatusArr = getSelectedProjectStatus();
   var adStatus = document.querySelector('input[name="adStatus"]:checked').value;
+  var createTime = document.getElementById('createTime').value;
   var opType = document.getElementById('opType').value;
   var scheduleTime = document.getElementById('scheduleTime').value;
   var loopActive = document.getElementById('loopSwitch').classList.contains('active');
@@ -994,9 +1078,8 @@ function saveStrategy() {
     document.getElementById('strategyName').focus();
     return;
   }
-  if (!projectStatus) {
-    showToast('请选择项目状态', 'error');
-    document.getElementById('projectStatus').focus();
+  if (projectStatusArr.length === 0) {
+    showToast('请至少选择一个项目状态', 'error');
     return;
   }
   if (selectedAccounts.length === 0) {
@@ -1008,13 +1091,26 @@ function saveStrategy() {
     document.getElementById('createTime').focus();
     return;
   }
+  // If adStatus is rejected, rejectType is required
+  var rejectTypes = [];
+  if (adStatus === 'rejected') {
+    rejectTypes = getSelectedRejectTypes();
+    if (rejectTypes.length === 0) {
+      showToast('请至少选择一个拒审组件类型', 'error');
+      return;
+    }
+  }
+
+  var statusLabels = { active: '投放中', partial: '部分投放中', not_started: '未到投放时间', paused: '暂停中' };
+  var projectStatusText = projectStatusArr.map(function(v) { return statusLabels[v] || v; }).join('、');
 
   var data = {
     name: name,
     channel: '广点通',
     accounts: selectedAccounts,
-    projectStatus: document.getElementById('projectStatus').selectedOptions[0].text,
+    projectStatus: projectStatusText,
     adStatus: adStatus === 'repeat' ? '重复投放' : '审核不通过',
+    rejectTypes: rejectTypes.length > 0 ? rejectTypes : undefined,
     createTimeThreshold: createTime + '小时',
     opType: opType === 'delete' ? '删除' : '暂停',
     schedule: scheduleTime,
