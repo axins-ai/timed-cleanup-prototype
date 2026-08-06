@@ -508,6 +508,26 @@
     transition: all var(--transition); flex-shrink: 0;
   }
   .metric-row-item .metric-remove:hover { background: #fff1f0; }
+  .metric-row-item .metric-tilde { color: var(--text-muted); font-size: 14px; padding: 0 4px; white-space: nowrap; }
+  .metric-row-item .metric-val { width: 110px; }
+
+  /* Metric picker dropdown */
+  .metric-picker-wrap { position: relative; display: inline-flex; }
+  .metric-picker {
+    position: absolute; top: calc(100% + 6px); left: 0;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); box-shadow: var(--shadow-lg);
+    min-width: 150px; z-index: 50; padding: 4px;
+  }
+  .metric-picker-item {
+    padding: 8px 14px; cursor: pointer; font-size: 14px; color: var(--text);
+    border-radius: var(--radius-sm); transition: all var(--transition);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .metric-picker-item:hover { background: var(--primary-bg); color: var(--primary); }
+  .metric-picker-item.disabled { color: var(--text-placeholder); cursor: not-allowed; }
+  .metric-picker-item.disabled:hover { background: none; color: var(--text-placeholder); }
+  .metric-picker-item .added-tag { font-size: 12px; color: var(--success); }
 
   /* ==================== HINT ICON ==================== */
   .hint-icon {
@@ -812,48 +832,6 @@
       </div>
     </div>
 
-    <!-- 广告状态 - 广点通+广告纬度专有 -->
-    <div class="form-item" id="adStatusItem">
-      <label class="form-label required">
-        广告状态
-        <span class="hint-icon" data-tip="广告对应广点通创意层级">?</span>
-      </label>
-      <div class="form-control" style="justify-content:center">
-        <div class="radio-group" style="width:100%;max-width:520px">
-          <label class="radio-item">
-            <input type="radio" name="adStatus" value="repeat" checked onchange="onAdStatusChange()">
-            <span class="radio-label-with-hint">
-              重复投放
-              <span class="hint-icon" data-tip="媒体标识&quot;重复投放&quot;的广告">?</span>
-            </span>
-          </label>
-          <label class="radio-item">
-            <input type="radio" name="adStatus" value="rejected" onchange="onAdStatusChange()">
-            <span class="radio-label-with-hint">
-              审核不通过
-              <span class="hint-icon" data-tip="媒体标识&quot;审核不通过&quot;的广告">?</span>
-            </span>
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <!-- 拒审组件类型 -->
-    <div class="collapsible-section" id="rejectTypeWrapper" style="display:none">
-      <div class="form-item">
-        <label class="form-label required">
-          拒审组件类型
-          <span class="hint-icon" data-tip="选择广告被拒审的组件类型">?</span>
-        </label>
-        <div class="form-control" style="justify-content:center">
-          <div class="checkbox-group-wrap" id="rejectTypeGroup">
-            <label class="checkbox-item"><input type="checkbox" name="rejectType" value="image">图片拒审</label>
-            <label class="checkbox-item"><input type="checkbox" name="rejectType" value="video">视频拒审</label>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- 广告创建时间 - 仅广告纬度 -->
     <div class="form-item" id="createTimeItem">
       <label class="form-label required">广告创建时间</label>
@@ -1095,23 +1073,12 @@ function updateOpDimRestrictions() {
 }
 
 function onOpDimChange() {
-  var channel = getChannel();
   var opDim = getOpDim();
 
   // Ad creation time — only for 广告纬度
   document.getElementById('createTimeItem').style.display = (opDim === 'ad') ? '' : 'none';
 
-  // Ad status — only for 广点通+广告
-  var shouldShowAdStatus = (channel === 'guangdiantong' && opDim === 'ad');
-  document.getElementById('adStatusItem').style.display = shouldShowAdStatus ? '' : 'none';
-  if (!shouldShowAdStatus) {
-    document.getElementById('rejectTypeWrapper').style.display = 'none';
-    document.querySelectorAll('input[name="rejectType"]').forEach(function(cb) { cb.checked = false; });
-  } else {
-    onAdStatusChange();
-  }
-
-  // Refresh monitor config
+  // Refresh monitor config (广告状态/素材标签 now live inside 监控配置)
   refreshMonitorConfig();
 }
 
@@ -1132,23 +1099,45 @@ function refreshMonitorConfig() {
   var channel = getChannel();
   var opDim = getOpDim();
   var container = document.getElementById('monitorContent');
-  var monitorSection = document.getElementById('monitorSection');
-
-  // 广点通 always → ad, 头条 always → material — both supported
-  // So monitor is always visible
-
-  var isGuangdiantong = channel === 'guangdiantong';
-  var isToutiao = channel === 'toutiao';
 
   var html = '';
 
+  // --- 广告状态 (广点通 only; 广点通锁定广告纬度) ---
+  if (channel === 'guangdiantong') {
+    html += '<div class="sub-section">';
+    html += '  <div class="sub-section-title">广告状态</div>';
+
+    html += '  <div class="form-item" style="margin-bottom:14px">';
+    html += '    <label class="form-label required" style="width:150px">广告状态</label>';
+    html += '    <div class="form-control" style="justify-content:center">';
+    html += '      <div class="radio-group" style="max-width:420px">';
+    html += '        <label class="radio-item"><input type="radio" name="adStatus" value="repeat"' + (adStatusState === 'rejected' ? '' : ' checked') + ' onchange="onAdStatusChange()"><span class="radio-label-with-hint">重复投放<span class="hint-icon" data-tip="媒体标识&quot;重复投放&quot;的广告">?</span></span></label>';
+    html += '        <label class="radio-item"><input type="radio" name="adStatus" value="rejected"' + (adStatusState === 'rejected' ? ' checked' : '') + ' onchange="onAdStatusChange()"><span class="radio-label-with-hint">审核不通过<span class="hint-icon" data-tip="媒体标识&quot;审核不通过&quot;的广告">?</span></span></label>';
+    html += '      </div>';
+    html += '    </div>';
+    html += '  </div>';
+
+    // 拒审组件类型 — conditional on 审核不通过
+    html += '  <div class="form-item" id="rejectTypeWrapper" style="' + (adStatusState === 'rejected' ? '' : 'display:none') + '">';
+    html += '    <label class="form-label required" style="width:150px">拒审组件类型</label>';
+    html += '    <div class="form-control" style="justify-content:center">';
+    html += '      <div class="checkbox-group-wrap">';
+    html += '        <label class="checkbox-item"><input type="checkbox" name="rejectType" value="image"' + (rejectTypeState.indexOf('image') >= 0 ? ' checked' : '') + '>图片拒审</label>';
+    html += '        <label class="checkbox-item"><input type="checkbox" name="rejectType" value="video"' + (rejectTypeState.indexOf('video') >= 0 ? ' checked' : '') + '>视频拒审</label>';
+    html += '      </div>';
+    html += '    </div>';
+    html += '  </div>';
+
+    html += '</div>';
+  }
+
   // --- 素材标签配置 (only for 头条) ---
-  if (isToutiao) {
+  if (channel === 'toutiao') {
     html += '<div class="sub-section">';
     html += '  <div class="sub-section-title">素材标签配置</div>';
 
     html += '  <div class="form-item" style="margin-bottom:14px">';
-    html += '    <label class="form-label required" style="width:120px">监控素材标签</label>';
+    html += '    <label class="form-label required" style="width:150px">监控素材标签</label>';
     html += '    <div class="form-control" style="justify-content:center">';
     html += '      <div class="checkbox-group-wrap">';
     html += '        <label class="checkbox-item"><input type="checkbox" name="materialTag" value="copy" checked>搬运</label>';
@@ -1160,7 +1149,7 @@ function refreshMonitorConfig() {
     html += '  </div>';
 
     html += '  <div class="form-item" style="margin-bottom:0">';
-    html += '    <label class="form-label required" style="width:120px">删除范围</label>';
+    html += '    <label class="form-label required" style="width:150px">删除范围</label>';
     html += '    <div class="form-control" style="justify-content:center">';
     html += '    <div class="radio-group" style="max-width:400px">';
     html += '      <label class="radio-item"><input type="radio" name="deleteScope" value="ad_only" checked>仅广告素材</label>';
@@ -1173,7 +1162,7 @@ function refreshMonitorConfig() {
   }
 
   // --- 数据指标配置 (always) ---
-  var timeOptions = monitorTimeRanges[channel] && monitorTimeRanges[channel][opDim] || [];
+  var timeOptions = (monitorTimeRanges[channel] && monitorTimeRanges[channel][opDim]) || [];
   html += '<div class="sub-section">';
   html += '  <div class="sub-section-title">数据指标配置</div>';
 
@@ -1194,17 +1183,20 @@ function refreshMonitorConfig() {
   html += '    </div>';
   html += '  </div>';
 
-  // Metrics — all custom, no defaults
+  // Metrics — 仅可添加 曝光 / 消耗，区间类型
   html += '  <div>';
   html += '    <div style="display:flex;align-items:center;margin-bottom:8px">';
   html += '      <span style="font-size:14px;font-weight:600;color:var(--text)">数据指标</span>';
-  html += '      <span class="hint-icon" data-tip="自定义配置项，可自由添加；输入范围为 0-9999999">?</span>';
+  html += '      <span class="hint-icon" data-tip="可添加「曝光」或「消耗」，配置区间阈值（min~max），范围为 0-9999999">?</span>';
   html += '    </div>';
   html += '    <div class="metric-list" id="metricList"></div>';
   html += '    <div class="metric-actions">';
-  html += '      <span class="link-btn" onclick="addMetric()">';
-  html += '        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>添加指标';
-  html += '      </span>';
+  html += '      <div class="metric-picker-wrap">';
+  html += '        <span class="link-btn" onclick="toggleMetricPicker()">';
+  html += '          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>添加指标';
+  html += '        </span>';
+  html += '        <div class="metric-picker" id="metricPicker" style="display:none"></div>';
+  html += '      </div>';
   html += '    </div>';
   html += '  </div>';
 
@@ -1212,6 +1204,7 @@ function refreshMonitorConfig() {
 
   container.innerHTML = html;
   renderMetrics();
+  renderMetricPicker();
 }
 
 // ===================== PROJECT STATUS RENDER =====================
@@ -1228,43 +1221,72 @@ function renderProjectStatus(channel) {
 
 // ===================== AD STATUS CHANGE =====================
 function onAdStatusChange() {
-  var channel = getChannel();
-  var opDim = getOpDim();
-  if (!(channel === 'guangdiantong' && opDim === 'ad')) return;
   var rejectedRadio = document.querySelector('input[name="adStatus"][value="rejected"]');
   var wrapper = document.getElementById('rejectTypeWrapper');
+  if (!wrapper) return;
   if (rejectedRadio && rejectedRadio.checked) {
+    adStatusState = 'rejected';
     wrapper.style.display = '';
-    wrapper.style.opacity = '1';
-    wrapper.style.maxHeight = '100px';
   } else {
-    wrapper.style.opacity = '0';
-    wrapper.style.maxHeight = '0';
-    setTimeout(function() { wrapper.style.display = 'none'; }, 300);
+    adStatusState = 'repeat';
+    wrapper.style.display = 'none';
+    rejectTypeState = [];
     document.querySelectorAll('input[name="rejectType"]').forEach(function(cb) { cb.checked = false; });
   }
 }
 
-// ===================== METRICS — all custom, no defaults =====================
+// ===================== METRICS — 曝光/消耗，区间类型 =====================
+var adStatusState = 'repeat';
+var rejectTypeState = [];
 var metricCounter = 0;
 var metrics = [];
+
+// 仅可添加的预设指标
+var metricPresets = [
+  { key: 'exposure', name: '曝光', unit: '次' },
+  { key: 'cost', name: '消耗', unit: '元' }
+];
+
+function isMetricAdded(key) {
+  return metrics.some(function(m) { return m.key === key; });
+}
 
 function renderMetrics() {
   var list = document.getElementById('metricList');
   if (!list) return;
   if (metrics.length === 0) {
-    list.innerHTML = '<div class="text-muted" style="padding:8px 0">暂未配置指标，点击下方「添加指标」按钮配置</div>';
+    list.innerHTML = '<div class="text-muted" style="padding:8px 0">暂未配置指标，点击下方「添加指标」选择「曝光」或「消耗」</div>';
     return;
   }
   list.innerHTML = metrics.map(function(m) {
     return '<div class="metric-row-item" data-metric-id="' + m.id + '">' +
       '<input type="checkbox" class="metric-cb"' + (m.enabled ? ' checked' : '') + ' onchange="toggleMetric(\'' + m.id + '\', this.checked)">' +
       '<span class="metric-name">' + m.name + '</span>' +
-      '<span class="metric-unit">阈值：</span>' +
-      '<input type="number" class="metric-val" value="' + m.value + '" min="0" max="9999999" placeholder="0-9999999" onchange="updateMetricValue(\'' + m.id + '\', parseInt(this.value) || 0)">' +
+      '<span class="metric-unit">区间：</span>' +
+      '<input type="number" class="metric-val" value="' + m.min + '" min="0" max="9999999" placeholder="最小值" onchange="updateMetricRange(\'' + m.id + '\', \'min\', parseInt(this.value) || 0)">' +
+      '<span class="metric-tilde">~</span>' +
+      '<input type="number" class="metric-val" value="' + m.max + '" min="0" max="9999999" placeholder="最大值" onchange="updateMetricRange(\'' + m.id + '\', \'max\', parseInt(this.value) || 9999999)">' +
+      '<span class="metric-unit">' + m.unit + '</span>' +
       '<span class="metric-remove" onclick="removeMetric(\'' + m.id + '\')" title="删除">&times;</span>' +
       '</div>';
   }).join('');
+}
+
+function renderMetricPicker() {
+  var picker = document.getElementById('metricPicker');
+  if (!picker) return;
+  picker.innerHTML = metricPresets.map(function(p) {
+    var added = isMetricAdded(p.key);
+    return '<div class="metric-picker-item' + (added ? ' disabled' : '') + '"' + (added ? '' : ' onclick="addMetric(\'' + p.key + '\')"') + '>' +
+      '<span>' + p.name + '</span>' + (added ? '<span class="added-tag">已添加</span>' : '') + '</div>';
+  }).join('');
+}
+
+function toggleMetricPicker() {
+  var picker = document.getElementById('metricPicker');
+  if (!picker) return;
+  renderMetricPicker();
+  picker.style.display = picker.style.display === 'none' ? '' : 'none';
 }
 
 function toggleMetric(id, checked) {
@@ -1272,21 +1294,29 @@ function toggleMetric(id, checked) {
   if (m) m.enabled = checked;
 }
 
-function updateMetricValue(id, val) {
+function updateMetricRange(id, field, val) {
   var m = metrics.find(function(x) { return x.id === id; });
-  if (m) m.value = Math.max(0, Math.min(9999999, val || 0));
+  if (!m) return;
+  m[field] = Math.max(0, Math.min(9999999, val || 0));
 }
 
-function addMetric() {
+function addMetric(key) {
+  var preset = metricPresets.find(function(p) { return p.key === key; });
+  if (!preset) return;
+  if (isMetricAdded(key)) { showToast('「' + preset.name + '」已添加', 'info'); return; }
   metricCounter++;
-  metrics.push({ id: 'm' + metricCounter, name: '指标' + metricCounter, enabled: true, value: 0, isDefault: false });
+  metrics.push({ id: 'm' + metricCounter, key: key, name: preset.name, unit: preset.unit, enabled: true, min: 0, max: 9999999 });
   renderMetrics();
-  showToast('已添加新指标，请修改名称和阈值', 'info');
+  renderMetricPicker();
+  var picker = document.getElementById('metricPicker');
+  if (picker) picker.style.display = 'none';
+  showToast('已添加指标「' + preset.name + '」，请配置区间', 'info');
 }
 
 function removeMetric(id) {
   metrics = metrics.filter(function(m) { return m.id !== id; });
   renderMetrics();
+  renderMetricPicker();
   showToast('已删除指标', 'info');
 }
 
@@ -1418,8 +1448,13 @@ function cancelForm() {
     showToast('已取消编辑', 'info');
     document.getElementById('strategyName').value = '';
     document.querySelector('input[name="channel"][value="guangdiantong"]').checked = true;
+    adStatusState = 'repeat';
+    rejectTypeState = [];
+    metrics = [];
+    metricCounter = 0;
     refreshAll();
-    document.getElementById('rejectTypeWrapper').style.display = 'none';
+    var rt = document.getElementById('rejectTypeWrapper');
+    if (rt) rt.style.display = 'none';
     document.getElementById('createTime').value = '';
     document.getElementById('scheduleTime').value = '02:00';
     document.getElementById('xValue').value = '1';
@@ -1431,8 +1466,6 @@ function cancelForm() {
     document.getElementById('loopLabel').textContent = '未开启';
     document.getElementById('loopHint').textContent = '开启后按设定天数循环执行，关闭则仅执行一次';
     document.getElementById('loopDays').value = 1;
-    metrics = [];
-    metricCounter = 0;
     renderMetrics();
   }
 }
@@ -1525,6 +1558,15 @@ renderMetrics();
 
 document.getElementById('accountModal').addEventListener('click', function(e) {
   if (e.target === this) closeAccountModal();
+});
+
+// Close metric picker when clicking outside
+document.addEventListener('click', function(e) {
+  var picker = document.getElementById('metricPicker');
+  if (!picker) return;
+  if (picker.style.display !== 'none' && !picker.parentElement.contains(e.target)) {
+    picker.style.display = 'none';
+  }
 });
 </script>
 
