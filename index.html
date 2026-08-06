@@ -193,11 +193,18 @@
     border-bottom: 1px dashed var(--border-light);
   }
   .sub-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .sub-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
   .sub-section-title {
     font-size: 14px; font-weight: 600; color: var(--text);
     margin-bottom: 16px;
     display: flex; align-items: center; gap: 8px;
   }
+  .sub-section-header .sub-section-title { margin-bottom: 0; }
+  .sub-section-body { animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .sub-section-title::before {
     content: "";
     width: 3px; height: 14px;
@@ -208,7 +215,7 @@
 
   /* ==================== FORM ==================== */
   .form-item {
-    display: flex; align-items: flex-start;
+    display: flex; align-items: center;
     margin-bottom: 20px;
     min-height: 36px;
   }
@@ -218,6 +225,7 @@
     color: var(--text-secondary); font-size: 14px;
     line-height: 36px; flex-shrink: 0;
     white-space: nowrap; font-weight: 500;
+    align-self: flex-start;
   }
   .form-label.required::before {
     content: "*"; color: var(--danger); margin-right: 4px;
@@ -246,7 +254,6 @@
   .radio-group, .checkbox-group {
     display: flex; align-items: center; gap: 28px;
     flex-wrap: wrap; min-height: 36px;
-    padding-top: 6px;
   }
   .radio-item, .checkbox-item {
     display: flex; align-items: center; gap: 8px;
@@ -418,7 +425,7 @@
   /* ==================== SWITCH ==================== */
   .switch-wrapper {
     display: flex; align-items: center; gap: 14px;
-    flex-wrap: wrap; padding-top: 6px;
+    flex-wrap: wrap;
   }
   .switch {
     position: relative; width: 48px; height: 24px;
@@ -1095,21 +1102,36 @@ function refreshAll() {
 }
 
 // ===================== REFRESH MONITOR CONFIG =====================
+function blockHeader(title, key) {
+  return '<div class="sub-section-header">' +
+    '<div class="sub-section-title">' + title + '</div>' +
+    '<div class="switch' + (monitorEnabled[key] ? ' active' : '') + '" id="sw_' + key + '" onclick="toggleMonitorBlock(\'' + key + '\')" title="开启/关闭该监控项"></div>' +
+    '</div>';
+}
+
+function toggleMonitorBlock(key) {
+  monitorEnabled[key] = !monitorEnabled[key];
+  var sw = document.getElementById('sw_' + key);
+  if (sw) sw.classList.toggle('active', monitorEnabled[key]);
+  var body = document.getElementById('body_' + key);
+  if (body) body.style.display = monitorEnabled[key] ? '' : 'none';
+}
+
 function refreshMonitorConfig() {
   var channel = getChannel();
   var opDim = getOpDim();
   var container = document.getElementById('monitorContent');
-
   var html = '';
 
-  // --- 广告状态 (广点通 only; 广点通锁定广告纬度) ---
+  // --- 广告状态 (广点通 only) ---
   if (channel === 'guangdiantong') {
     html += '<div class="sub-section">';
-    html += '  <div class="sub-section-title">广告状态</div>';
+    html += blockHeader('广告状态', 'adStatus');
+    html += '<div class="sub-section-body" id="body_adStatus" style="' + (monitorEnabled.adStatus ? '' : 'display:none') + '">';
 
     html += '  <div class="form-item" style="margin-bottom:14px">';
     html += '    <label class="form-label required" style="width:150px">广告状态</label>';
-    html += '    <div class="form-control" style="justify-content:center">';
+    html += '    <div class="form-control">';
     html += '      <div class="radio-group" style="max-width:420px">';
     html += '        <label class="radio-item"><input type="radio" name="adStatus" value="repeat"' + (adStatusState === 'rejected' ? '' : ' checked') + ' onchange="onAdStatusChange()"><span class="radio-label-with-hint">重复投放<span class="hint-icon" data-tip="媒体标识&quot;重复投放&quot;的广告">?</span></span></label>';
     html += '        <label class="radio-item"><input type="radio" name="adStatus" value="rejected"' + (adStatusState === 'rejected' ? ' checked' : '') + ' onchange="onAdStatusChange()"><span class="radio-label-with-hint">审核不通过<span class="hint-icon" data-tip="媒体标识&quot;审核不通过&quot;的广告">?</span></span></label>';
@@ -1120,7 +1142,7 @@ function refreshMonitorConfig() {
     // 拒审组件类型 — conditional on 审核不通过
     html += '  <div class="form-item" id="rejectTypeWrapper" style="' + (adStatusState === 'rejected' ? '' : 'display:none') + '">';
     html += '    <label class="form-label required" style="width:150px">拒审组件类型</label>';
-    html += '    <div class="form-control" style="justify-content:center">';
+    html += '    <div class="form-control">';
     html += '      <div class="checkbox-group-wrap">';
     html += '        <label class="checkbox-item"><input type="checkbox" name="rejectType" value="image"' + (rejectTypeState.indexOf('image') >= 0 ? ' checked' : '') + '>图片拒审</label>';
     html += '        <label class="checkbox-item"><input type="checkbox" name="rejectType" value="video"' + (rejectTypeState.indexOf('video') >= 0 ? ' checked' : '') + '>视频拒审</label>';
@@ -1128,17 +1150,19 @@ function refreshMonitorConfig() {
     html += '    </div>';
     html += '  </div>';
 
-    html += '</div>';
+    html += '</div>'; // sub-section-body
+    html += '</div>'; // sub-section
   }
 
   // --- 素材标签配置 (only for 头条) ---
   if (channel === 'toutiao') {
     html += '<div class="sub-section">';
-    html += '  <div class="sub-section-title">素材标签配置</div>';
+    html += blockHeader('素材标签配置', 'materialTag');
+    html += '<div class="sub-section-body" id="body_materialTag" style="' + (monitorEnabled.materialTag ? '' : 'display:none') + '">';
 
     html += '  <div class="form-item" style="margin-bottom:14px">';
     html += '    <label class="form-label required" style="width:150px">监控素材标签</label>';
-    html += '    <div class="form-control" style="justify-content:center">';
+    html += '    <div class="form-control">';
     html += '      <div class="checkbox-group-wrap">';
     html += '        <label class="checkbox-item"><input type="checkbox" name="materialTag" value="copy" checked>搬运</label>';
     html += '        <label class="checkbox-item"><input type="checkbox" name="materialTag" value="low_quality">低质</label>';
@@ -1150,7 +1174,7 @@ function refreshMonitorConfig() {
 
     html += '  <div class="form-item" style="margin-bottom:0">';
     html += '    <label class="form-label required" style="width:150px">删除范围</label>';
-    html += '    <div class="form-control" style="justify-content:center">';
+    html += '    <div class="form-control">';
     html += '    <div class="radio-group" style="max-width:400px">';
     html += '      <label class="radio-item"><input type="radio" name="deleteScope" value="ad_only" checked>仅广告素材</label>';
     html += '      <label class="radio-item"><input type="radio" name="deleteScope" value="ad_and_library">广告素材+素材库</label>';
@@ -1158,13 +1182,15 @@ function refreshMonitorConfig() {
     html += '    </div>';
     html += '  </div>';
 
-    html += '</div>';
+    html += '</div>'; // sub-section-body
+    html += '</div>'; // sub-section
   }
 
   // --- 数据指标配置 (always) ---
   var timeOptions = (monitorTimeRanges[channel] && monitorTimeRanges[channel][opDim]) || [];
   html += '<div class="sub-section">';
-  html += '  <div class="sub-section-title">数据指标配置</div>';
+  html += blockHeader('数据指标配置', 'metrics');
+  html += '<div class="sub-section-body" id="body_metrics" style="' + (monitorEnabled.metrics ? '' : 'display:none') + '">';
 
   // Time range chips
   html += '  <div style="margin-bottom:16px">';
@@ -1179,7 +1205,7 @@ function refreshMonitorConfig() {
   html += '    </div>';
   html += '    <div class="x-input-below" id="xInputBelow" style="display:' + (timeOptions.length > 0 && timeOptions[0].hasX ? '' : 'none') + '">';
   html += '      <span style="color:var(--text-secondary);font-size:14px">输入小时数：</span>';
-  html += '      <input type="number" class="x-val" id="xValue" value="1" min="1" max="9999">';
+  html += '      <input type="number" class="x-val" id="xValue" value="' + xValueState + '" min="1" max="9999" oninput="xValueState=parseInt(this.value)||1">';
   html += '    </div>';
   html += '  </div>';
 
@@ -1200,7 +1226,8 @@ function refreshMonitorConfig() {
   html += '    </div>';
   html += '  </div>';
 
-  html += '</div>';
+  html += '</div>'; // sub-section-body
+  html += '</div>'; // sub-section
 
   container.innerHTML = html;
   renderMetrics();
@@ -1240,6 +1267,10 @@ var adStatusState = 'repeat';
 var rejectTypeState = [];
 var metricCounter = 0;
 var metrics = [];
+
+// 监控配置各子块开关状态（至少开启一个；默认数据指标开启）
+var monitorEnabled = { adStatus: false, materialTag: false, metrics: true };
+var xValueState = 1;
 
 // 仅可添加的预设指标
 var metricPresets = [
@@ -1452,6 +1483,8 @@ function cancelForm() {
     rejectTypeState = [];
     metrics = [];
     metricCounter = 0;
+    monitorEnabled = { adStatus: false, materialTag: false, metrics: true };
+    xValueState = 1;
     refreshAll();
     var rt = document.getElementById('rejectTypeWrapper');
     if (rt) rt.style.display = 'none';
@@ -1491,37 +1524,45 @@ function saveStrategy() {
     if (!createTime) { showToast('请输入广告创建时间阈值', 'error'); document.getElementById('createTime').focus(); return; }
   }
 
-  // Ad status — only for 广点通+广告
-  var adStatus = null;
-  var rejectTypes = null;
-  if (channel === 'guangdiantong' && opDim === 'ad') {
+  // --- Monitor validation (only enabled blocks) ---
+  var monitorData = {};
+  var presentKeys = channel === 'guangdiantong' ? ['adStatus', 'metrics'] : ['materialTag', 'metrics'];
+  var anyEnabled = presentKeys.some(function(k) { return monitorEnabled[k]; });
+  if (!anyEnabled) {
+    showToast('监控配置中至少需开启一项（' + (channel === 'guangdiantong' ? '广告状态 / 数据指标' : '素材标签 / 数据指标') + '）', 'error');
+    return;
+  }
+
+  // 广告状态 — only when enabled (广点通)
+  if (monitorEnabled.adStatus) {
     var adStatusRadio = document.querySelector('input[name="adStatus"]:checked');
-    adStatus = adStatusRadio ? adStatusRadio.value : 'repeat';
+    var adStatus = adStatusRadio ? adStatusRadio.value : 'repeat';
+    monitorData.adStatus = adStatus === 'repeat' ? '重复投放' : '审核不通过';
     if (adStatus === 'rejected') {
-      rejectTypes = getSelectedRejectTypes();
+      var rejectTypes = getSelectedRejectTypes();
       if (rejectTypes.length === 0) { showToast('请至少选择一个拒审组件类型', 'error'); return; }
+      monitorData.rejectTypes = rejectTypes;
     }
   }
 
-  // --- Monitor validation ---
-  var monitorData = {};
-
-  // 头条 always has 素材标签
-  if (channel === 'toutiao') {
+  // 素材标签 — only when enabled (头条)
+  if (monitorEnabled.materialTag) {
     var tags = getSelectedMaterialTags();
     if (tags.length === 0) { showToast('请至少选择一个监控素材标签', 'error'); return; }
     monitorData.materialTags = tags;
-    var dsRadio = document.querySelector('input[name="deleteScope"]:checked');
-    monitorData.deleteScope = dsRadio ? dsRadio.value : 'ad_only';
+    var dsRadio2 = document.querySelector('input[name="deleteScope"]:checked');
+    monitorData.deleteScope = dsRadio2 ? dsRadio2.value : 'ad_only';
   }
 
-  // Data metrics — always available
-  var timeRange = getSelectedTimeRangeLabel();
-  if (!timeRange) { showToast('请选择时间范围', 'error'); return; }
-  var activeMetrics = getActiveMetrics();
-  if (activeMetrics.length === 0) { showToast('请至少添加并启用一个数据指标', 'error'); return; }
-  monitorData.timeRange = timeRange;
-  monitorData.metrics = activeMetrics;
+  // 数据指标 — only when enabled
+  if (monitorEnabled.metrics) {
+    var timeRange = getSelectedTimeRangeLabel();
+    if (!timeRange) { showToast('请选择时间范围', 'error'); return; }
+    var activeMetrics = getActiveMetrics();
+    if (activeMetrics.length === 0) { showToast('请至少添加并启用一个数据指标', 'error'); return; }
+    monitorData.timeRange = timeRange;
+    monitorData.metrics = activeMetrics;
+  }
 
   // Build summary
   var channelName = channel === 'guangdiantong' ? '广点通' : '头条';
@@ -1537,8 +1578,8 @@ function saveStrategy() {
     opDim: dimLabels[opDim] || opDim,
     accounts: selectedAccounts,
     projectStatus: projectStatusText,
-    adStatus: adStatus === 'repeat' ? '重复投放' : (adStatus === 'rejected' ? '审核不通过' : null),
-    rejectTypes: rejectTypes,
+    adStatus: monitorData.adStatus || null,
+    rejectTypes: monitorData.rejectTypes || null,
     createTimeThreshold: opDim === 'ad' ? (document.getElementById('createTime').value + '小时') : null,
     monitor: monitorData,
     opType: opType === 'delete' ? '删除' : '暂停',
