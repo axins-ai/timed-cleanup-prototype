@@ -154,7 +154,7 @@
   .btn-text.danger { color: var(--danger); }
   .btn-text.danger:hover { background: #fff1f0; }
 
-  /* ==================== MAIN CONTENT — 加宽 ==================== */
+  /* ==================== MAIN CONTENT ==================== */
   .main-content {
     padding: 24px 24px;
     max-width: 1320px;
@@ -182,6 +182,26 @@
     content: "";
     width: 4px; height: 20px;
     background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* Sub-section inside section */
+  .sub-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--border-light);
+  }
+  .sub-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .sub-section-title {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sub-section-title::before {
+    content: "";
+    width: 3px; height: 14px;
+    background: var(--primary);
     border-radius: 2px;
     flex-shrink: 0;
   }
@@ -234,12 +254,22 @@
     font-size: 14px;
     padding: 4px 0;
     user-select: none;
+    transition: opacity var(--transition);
   }
   .radio-item input[type="radio"],
   .checkbox-item input[type="checkbox"] {
     width: 16px; height: 16px; cursor: pointer;
     accent-color: var(--primary);
     flex-shrink: 0;
+  }
+  /* Disabled radio item */
+  .radio-item.disabled {
+    cursor: not-allowed;
+    color: var(--text-placeholder);
+  }
+  .radio-item.disabled input[type="radio"] {
+    cursor: not-allowed;
+    accent-color: #d9d9d9;
   }
   .radio-label-with-hint {
     display: inline-flex; align-items: center; gap: 6px;
@@ -438,79 +468,6 @@
   .loop-inline .loop-days-input:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
-  }
-
-  /* ==================== MONITOR MODULES ==================== */
-  .monitor-modules {
-    display: flex; flex-direction: column; gap: 16px;
-  }
-  .monitor-module {
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    background: #fafbfc;
-    transition: border-color var(--transition);
-  }
-  .monitor-module.enabled {
-    border-color: var(--primary-light);
-    background: #fafbff;
-  }
-  .module-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px;
-    cursor: default;
-    user-select: none;
-    background: #fff;
-    border-bottom: 1px solid transparent;
-    transition: all var(--transition);
-  }
-  .monitor-module.enabled .module-header {
-    border-bottom-color: var(--border-light);
-  }
-  .module-header-left {
-    display: flex; align-items: center; gap: 12px;
-  }
-  .module-icon {
-    font-size: 18px; width: 36px; height: 36px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: var(--radius-sm);
-    background: var(--bg-page);
-    flex-shrink: 0;
-  }
-  .module-title {
-    font-size: 14px; font-weight: 600; color: var(--text);
-  }
-  .module-desc {
-    font-size: 12px; color: var(--text-muted);
-    margin-top: 2px; font-weight: 400;
-  }
-  .module-toggle-switch {
-    position: relative; width: 44px; height: 22px;
-    background: #d9d9d9; border-radius: 11px;
-    cursor: pointer; transition: background var(--transition);
-    flex-shrink: 0;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
-  }
-  .module-toggle-switch.active { background: var(--primary); }
-  .module-toggle-switch::after {
-    content: "";
-    position: absolute;
-    width: 18px; height: 18px; background: #fff;
-    border-radius: 50%;
-    top: 2px; left: 2px;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-  .module-toggle-switch.active::after { transform: translateX(22px); }
-
-  .module-body {
-    padding: 0 20px;
-    max-height: 0; overflow: hidden;
-    transition: max-height 0.35s ease, padding 0.35s ease;
-  }
-  .module-body.show {
-    max-height: 600px;
-    padding: 20px;
   }
 
   /* ==================== METRIC ROWS ==================== */
@@ -823,22 +780,22 @@
   <div class="section">
     <div class="section-title">属性配置</div>
 
-    <!-- 操作纬度 -->
+    <!-- 操作纬度 - 按渠道限制可选 -->
     <div class="form-item">
       <label class="form-label required">
         操作纬度
-        <span class="hint-icon" data-tip="选择策略执行的目标层级；广点通支持项目/广告，头条支持项目/广告/素材">?</span>
+        <span class="hint-icon" data-tip="选择策略执行的目标层级；广点通仅限广告纬度，头条仅限素材纬度">?</span>
       </label>
       <div class="form-control" style="justify-content:center">
         <div class="radio-group" id="opDimGroup">
-          <label class="radio-item">
-            <input type="radio" name="opDim" value="project" checked onchange="onOpDimChange()">项目
+          <label class="radio-item" id="opDimProject">
+            <input type="radio" name="opDim" value="project">项目
           </label>
-          <label class="radio-item">
-            <input type="radio" name="opDim" value="ad" onchange="onOpDimChange()">广告
+          <label class="radio-item" id="opDimAd">
+            <input type="radio" name="opDim" value="ad">广告
           </label>
-          <label class="radio-item" id="opDimMaterial" style="display:none">
-            <input type="radio" name="opDim" value="material" onchange="onOpDimChange()">素材
+          <label class="radio-item" id="opDimMaterial">
+            <input type="radio" name="opDim" value="material">素材
           </label>
         </div>
       </div>
@@ -914,8 +871,8 @@
   <!-- ==================== 三、监控配置 ==================== -->
   <div class="section" id="monitorSection">
     <div class="section-title">监控配置</div>
-    <div class="monitor-modules" id="monitorModules">
-      <!-- Modules populated by JS -->
+    <div id="monitorContent">
+      <!-- Rendered by JS dynamically -->
     </div>
   </div>
 
@@ -1028,29 +985,9 @@ var monitorTimeRanges = {
       { label: '当日累计', hasX: false },
       { label: '过去x小时', hasX: true },
       { label: '创建后x小时', hasX: true },
-    ],
-    project: [
-      { label: '过去168小时', hasX: false },
-      { label: '当日累计', hasX: false },
-      { label: '过去x小时', hasX: true },
-      { label: '创建后x小时', hasX: true },
     ]
   },
   toutiao: {
-    project: [
-      { label: '过去168小时', hasX: false },
-      { label: '当日累计', hasX: false },
-      { label: '过去x小时', hasX: true },
-      { label: '项目创建后在投x小时', hasX: true },
-      { label: '项目创建后x小时', hasX: true },
-    ],
-    ad: [
-      { label: '过去168小时', hasX: false },
-      { label: '当日累计', hasX: false },
-      { label: '过去x小时', hasX: true },
-      { label: '进入新户期x小时且未进入学习期', hasX: true },
-      { label: '进入学习期x小时', hasX: true },
-    ],
     material: [
       { label: '过去168小时', hasX: false },
       { label: '当日累计', hasX: false },
@@ -1059,55 +996,12 @@ var monitorTimeRanges = {
   }
 };
 
-// Supported monitor dimensions per channel
-var monitorSupportedDims = {
-  guangdiantong: ['ad'],
-  toutiao: ['project', 'material']
+// Op dim restriction: which dim is the ONLY selectable one per channel
+// guangdiantong → only 'ad'; toutiao → only 'material'
+var allowedOpDimByChannel = {
+  guangdiantong: 'ad',
+  toutiao: 'material'
 };
-
-// Operation dim visibility
-var opDimsByChannel = {
-  guangdiantong: ['项目', '广告'],
-  toutiao: ['项目', '广告', '素材'],
-};
-
-// ===================== MONITOR MODULE STATE =====================
-// Each module: { id, enabled, label, desc, icon }
-var monitorModules = [];
-
-function buildMonitorModules() {
-  var channel = getChannel();
-  var opDim = getOpDim();
-  var supported = monitorSupportedDims[channel] && monitorSupportedDims[channel].indexOf(opDim) !== -1;
-
-  if (!supported) {
-    monitorModules = [];
-    return;
-  }
-
-  // Module 1: 数据指标监控 (always available for supported dims)
-  var metricsModule = {
-    id: 'metrics',
-    enabled: true,
-    label: '数据指标监控',
-    desc: '配置时间范围与数据指标阈值，触发后执行操作',
-    icon: '📊'
-  };
-
-  // Module 2: 素材标签监控 (only for 头条 + 素材)
-  var tagModule = null;
-  if (channel === 'toutiao' && opDim === 'material') {
-    tagModule = {
-      id: 'materialTag',
-      enabled: true,
-      label: '素材标签监控',
-      desc: '监控素材标签类型（搬运/低质/低效/同质化）及配置删除范围',
-      icon: '🏷️'
-    };
-  }
-
-  monitorModules = tagModule ? [tagModule, metricsModule] : [metricsModule];
-}
 
 // ===================== HELPERS =====================
 function getChannel() {
@@ -1150,62 +1044,66 @@ function getSelectedTimeRangeLabel() {
   return label;
 }
 
-function isModuleEnabled(moduleId) {
-  var m = monitorModules.find(function(mm) { return mm.id === moduleId; });
-  return m ? m.enabled : false;
-}
-
 // ===================== CHIP (TIME RANGE) =====================
 function selectTimeRangeChip(chipEl) {
   document.querySelectorAll('.time-range-chip').forEach(function(c) { c.classList.remove('active'); });
   chipEl.classList.add('active');
   var hasX = chipEl.dataset.hasx === 'true';
-  document.getElementById('xInputBelow').style.display = hasX ? '' : 'none';
+  var xBelow = document.getElementById('xInputBelow');
+  if (xBelow) xBelow.style.display = hasX ? '' : 'none';
 }
 
-// ===================== MODULE TOGGLE =====================
-function toggleMonitorModule(moduleId) {
-  var m = monitorModules.find(function(mm) { return mm.id === moduleId; });
-  if (!m) return;
-  m.enabled = !m.enabled;
+// ===================== OP DIM — channel-based restriction =====================
+function updateOpDimRestrictions() {
+  var channel = getChannel();
+  var allowed = allowedOpDimByChannel[channel];
 
-  // Update UI
-  var moduleEl = document.querySelector('.monitor-module[data-module="' + moduleId + '"]');
-  var toggleEl = document.getElementById('moduleToggle-' + moduleId);
-  var bodyEl = document.getElementById('moduleBody-' + moduleId);
+  var projectItem = document.getElementById('opDimProject');
+  var adItem = document.getElementById('opDimAd');
+  var materialItem = document.getElementById('opDimMaterial');
 
-  if (m.enabled) {
-    moduleEl.classList.add('enabled');
-    toggleEl.classList.add('active');
-    bodyEl.classList.add('show');
-  } else {
-    moduleEl.classList.remove('enabled');
-    toggleEl.classList.remove('active');
-    bodyEl.classList.remove('show');
+  // Enable all first
+  [projectItem, adItem, materialItem].forEach(function(item) {
+    item.classList.remove('disabled');
+    var radio = item.querySelector('input[type="radio"]');
+    if (radio) radio.disabled = false;
+  });
+
+  // 素材 always visible, but disabled for guangdiantong
+  materialItem.style.display = '';
+
+  // Disable non-allowed options based on channel
+  if (channel === 'guangdiantong') {
+    // Only ad is selectable
+    projectItem.classList.add('disabled');
+    projectItem.querySelector('input[type="radio"]').disabled = true;
+    materialItem.classList.add('disabled');
+    materialItem.querySelector('input[type="radio"]').disabled = true;
+    // Auto-select ad
+    adItem.querySelector('input[type="radio"]').checked = true;
+  } else if (channel === 'toutiao') {
+    // Only material is selectable
+    projectItem.classList.add('disabled');
+    projectItem.querySelector('input[type="radio"]').disabled = true;
+    adItem.classList.add('disabled');
+    adItem.querySelector('input[type="radio"]').disabled = true;
+    // Auto-select material
+    materialItem.querySelector('input[type="radio"]').checked = true;
   }
+
+  onOpDimChange();
 }
 
-// ===================== OP DIM CHANGE =====================
 function onOpDimChange() {
   var channel = getChannel();
   var opDim = getOpDim();
-
-  // Show/hide 素材 option
-  var materialItem = document.getElementById('opDimMaterial');
-  var dims = opDimsByChannel[channel];
-  materialItem.style.display = (dims && dims.length === 3) ? '' : 'none';
-  if (dims && dims.length === 2 && opDim === 'material') {
-    document.querySelector('input[name="opDim"][value="project"]').checked = true;
-    opDim = 'project';
-  }
 
   // Ad creation time — only for 广告纬度
   document.getElementById('createTimeItem').style.display = (opDim === 'ad') ? '' : 'none';
 
   // Ad status — only for 广点通+广告
-  var adStatusItem = document.getElementById('adStatusItem');
   var shouldShowAdStatus = (channel === 'guangdiantong' && opDim === 'ad');
-  adStatusItem.style.display = shouldShowAdStatus ? '' : 'none';
+  document.getElementById('adStatusItem').style.display = shouldShowAdStatus ? '' : 'none';
   if (!shouldShowAdStatus) {
     document.getElementById('rejectTypeWrapper').style.display = 'none';
     document.querySelectorAll('input[name="rejectType"]').forEach(function(cb) { cb.checked = false; });
@@ -1226,139 +1124,94 @@ function refreshAll() {
     ? '项目对应广点通单元层级，支持多选'
     : '项目对应头条计划层级，支持多选');
 
-  var dims = opDimsByChannel[channel];
-  document.getElementById('opDimMaterial').style.display = (dims && dims.length === 3) ? '' : 'none';
-  if (dims && dims.length === 2) {
-    var mr = document.querySelector('input[name="opDim"][value="material"]');
-    if (mr && mr.checked) document.querySelector('input[name="opDim"][value="project"]').checked = true;
-  }
-  onOpDimChange();
+  updateOpDimRestrictions();
 }
 
 // ===================== REFRESH MONITOR CONFIG =====================
 function refreshMonitorConfig() {
   var channel = getChannel();
   var opDim = getOpDim();
+  var container = document.getElementById('monitorContent');
   var monitorSection = document.getElementById('monitorSection');
-  var supported = monitorSupportedDims[channel] && monitorSupportedDims[channel].indexOf(opDim) !== -1;
 
-  if (!supported) {
-    monitorSection.style.display = 'none';
-    return;
-  }
-  monitorSection.style.display = '';
+  // 广点通 always → ad, 头条 always → material — both supported
+  // So monitor is always visible
 
-  // Build module definitions
-  buildMonitorModules();
+  var isGuangdiantong = channel === 'guangdiantong';
+  var isToutiao = channel === 'toutiao';
 
-  // Render modules
-  var container = document.getElementById('monitorModules');
   var html = '';
 
-  monitorModules.forEach(function(mod) {
-    html += '<div class="monitor-module' + (mod.enabled ? ' enabled' : '') + '" data-module="' + mod.id + '">';
-    html += '  <div class="module-header">';
-    html += '    <div class="module-header-left">';
-    html += '      <div class="module-icon">' + mod.icon + '</div>';
-    html += '      <div>';
-    html += '        <div class="module-title">' + mod.label + '</div>';
-    html += '        <div class="module-desc">' + mod.desc + '</div>';
+  // --- 素材标签配置 (only for 头条) ---
+  if (isToutiao) {
+    html += '<div class="sub-section">';
+    html += '  <div class="sub-section-title">素材标签配置</div>';
+
+    html += '  <div class="form-item" style="margin-bottom:14px">';
+    html += '    <label class="form-label required" style="width:120px">监控素材标签</label>';
+    html += '    <div class="form-control" style="justify-content:center">';
+    html += '      <div class="checkbox-group-wrap">';
+    html += '        <label class="checkbox-item"><input type="checkbox" name="materialTag" value="copy" checked>搬运</label>';
+    html += '        <label class="checkbox-item"><input type="checkbox" name="materialTag" value="low_quality">低质</label>';
+    html += '        <label class="checkbox-item"><input type="checkbox" name="materialTag" value="low_efficiency">低效</label>';
+    html += '        <label class="checkbox-item"><input type="checkbox" name="materialTag" value="homogeneous">同质化</label>';
     html += '      </div>';
     html += '    </div>';
-    html += '    <div class="module-toggle-switch' + (mod.enabled ? ' active' : '') + '" id="moduleToggle-' + mod.id + '" onclick="toggleMonitorModule(\'' + mod.id + '\')"></div>';
     html += '  </div>';
-    html += '  <div class="module-body' + (mod.enabled ? ' show' : '') + '" id="moduleBody-' + mod.id + '">';
 
-    if (mod.id === 'materialTag') {
-      html += renderMaterialTagBody();
-    } else if (mod.id === 'metrics') {
-      html += renderMetricsBody(channel, opDim);
-    }
-
+    html += '  <div class="form-item" style="margin-bottom:0">';
+    html += '    <label class="form-label required" style="width:120px">删除范围</label>';
+    html += '    <div class="form-control" style="justify-content:center">';
+    html += '    <div class="radio-group" style="max-width:400px">';
+    html += '      <label class="radio-item"><input type="radio" name="deleteScope" value="ad_only" checked>仅广告素材</label>';
+    html += '      <label class="radio-item"><input type="radio" name="deleteScope" value="ad_and_library">广告素材+素材库</label>';
+    html += '    </div>';
+    html += '    </div>';
     html += '  </div>';
+
     html += '</div>';
-  });
-
-  container.innerHTML = html;
-
-  // After render: set up time range chip click handlers
-  if (isModuleEnabled('metrics')) {
-    setupTimeRangeChips(channel, opDim);
   }
 
-  // After render: render metric list
-  renderMetrics();
-}
-
-function setupTimeRangeChips(channel, opDim) {
-  var timeOptions = monitorTimeRanges[channel] && monitorTimeRanges[channel][opDim];
-  if (!timeOptions) return;
-
-  var chipsContainer = document.querySelector('.time-range-chips');
-  if (!chipsContainer) return;
-
-  var html = timeOptions.map(function(opt, idx) {
-    return '<span class="time-range-chip' + (idx === 0 ? ' active' : '') + '" data-hasx="' + opt.hasX + '" onclick="selectTimeRangeChip(this)">' +
-      opt.label + '</span>';
-  }).join('');
-  chipsContainer.innerHTML = html;
-
-  // Update x input visibility
-  var activeChip = chipsContainer.querySelector('.time-range-chip.active');
-  var hasX = activeChip && activeChip.dataset.hasx === 'true';
-  document.getElementById('xInputBelow').style.display = hasX ? '' : 'none';
-}
-
-function renderMaterialTagBody() {
-  return '' +
-    '<div class="form-item" style="margin-bottom:14px">' +
-    '  <label class="form-label required" style="width:120px">监控素材标签</label>' +
-    '  <div class="form-control" style="justify-content:center">' +
-    '    <div class="checkbox-group-wrap">' +
-    '      <label class="checkbox-item"><input type="checkbox" name="materialTag" value="copy" checked>搬运</label>' +
-    '      <label class="checkbox-item"><input type="checkbox" name="materialTag" value="low_quality">低质</label>' +
-    '      <label class="checkbox-item"><input type="checkbox" name="materialTag" value="low_efficiency">低效</label>' +
-    '      <label class="checkbox-item"><input type="checkbox" name="materialTag" value="homogeneous">同质化</label>' +
-    '    </div>' +
-    '  </div>' +
-    '</div>' +
-    '<div class="form-item" style="margin-bottom:0">' +
-    '  <label class="form-label required" style="width:120px">删除范围</label>' +
-    '  <div class="form-control" style="justify-content:center">' +
-    '    <div class="radio-group-wrap" style="max-width:400px">' +
-    '      <label class="radio-item"><input type="radio" name="deleteScope" value="ad_only" checked>仅广告素材</label>' +
-    '      <label class="radio-item"><input type="radio" name="deleteScope" value="ad_and_library">广告素材+素材库</label>' +
-    '    </div>' +
-    '  </div>' +
-    '</div>';
-}
-
-function renderMetricsBody(channel, opDim) {
+  // --- 数据指标配置 (always) ---
   var timeOptions = monitorTimeRanges[channel] && monitorTimeRanges[channel][opDim] || [];
-  return '' +
-    '<div style="margin-bottom:16px">' +
-    '  <div style="display:flex;align-items:center;margin-bottom:8px">' +
-    '    <span style="font-size:14px;font-weight:600;color:var(--text)">时间范围</span>' +
-    '    <span class="hint-icon" data-tip="根据所选时间范围内的数据指标判断是否执行操作">?</span>' +
-    '  </div>' +
-    '  <div class="time-range-chips"></div>' +
-    '  <div class="x-input-below" id="xInputBelow" style="display:none">' +
-    '    <span style="color:var(--text-secondary);font-size:14px">输入小时数：</span>' +
-    '    <input type="number" class="x-val" id="xValue" value="1" min="1" max="9999">' +
-    '  </div>' +
-    '</div>' +
-    '<div>' +
-    '  <div style="display:flex;align-items:center;margin-bottom:8px">' +
-    '    <span style="font-size:14px;font-weight:600;color:var(--text)">数据指标</span>' +
-    '    <span class="hint-icon" data-tip="选配项，可自定义增加；输入范围为 0-9999999">?</span>' +
-    '  </div>' +
-    '  <div class="metric-list" id="metricList"></div>' +
-    '  <div class="metric-actions">' +
-    '    <span class="link-btn" onclick="addMetric()">' +
-    '      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>添加指标' +
-    '    </span>' +
-    '  </div>' +
-    '</div>';
+  html += '<div class="sub-section">';
+  html += '  <div class="sub-section-title">数据指标配置</div>';
+
+  // Time range chips
+  html += '  <div style="margin-bottom:16px">';
+  html += '    <div style="display:flex;align-items:center;margin-bottom:8px">';
+  html += '      <span style="font-size:14px;font-weight:600;color:var(--text)">时间范围</span>';
+  html += '      <span class="hint-icon" data-tip="根据所选时间范围内的数据指标判断是否执行操作">?</span>';
+  html += '    </div>';
+  html += '    <div class="time-range-chips">';
+  timeOptions.forEach(function(opt, idx) {
+    html += '<span class="time-range-chip' + (idx === 0 ? ' active' : '') + '" data-hasx="' + opt.hasX + '" onclick="selectTimeRangeChip(this)">' + opt.label + '</span>';
+  });
+  html += '    </div>';
+  html += '    <div class="x-input-below" id="xInputBelow" style="display:' + (timeOptions.length > 0 && timeOptions[0].hasX ? '' : 'none') + '">';
+  html += '      <span style="color:var(--text-secondary);font-size:14px">输入小时数：</span>';
+  html += '      <input type="number" class="x-val" id="xValue" value="1" min="1" max="9999">';
+  html += '    </div>';
+  html += '  </div>';
+
+  // Metrics — all custom, no defaults
+  html += '  <div>';
+  html += '    <div style="display:flex;align-items:center;margin-bottom:8px">';
+  html += '      <span style="font-size:14px;font-weight:600;color:var(--text)">数据指标</span>';
+  html += '      <span class="hint-icon" data-tip="自定义配置项，可自由添加；输入范围为 0-9999999">?</span>';
+  html += '    </div>';
+  html += '    <div class="metric-list" id="metricList"></div>';
+  html += '    <div class="metric-actions">';
+  html += '      <span class="link-btn" onclick="addMetric()">';
+  html += '        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>添加指标';
+  html += '      </span>';
+  html += '    </div>';
+  html += '  </div>';
+
+  html += '</div>';
+
+  container.innerHTML = html;
+  renderMetrics();
 }
 
 // ===================== PROJECT STATUS RENDER =====================
@@ -1392,28 +1245,25 @@ function onAdStatusChange() {
   }
 }
 
-// ===================== METRICS =====================
-var metricCounter = 2;
-var metrics = [
-  { id: 'm1', name: '消耗', enabled: true, value: 100, isDefault: true },
-  { id: 'm2', name: '曝光', enabled: true, value: 1000, isDefault: true },
-];
+// ===================== METRICS — all custom, no defaults =====================
+var metricCounter = 0;
+var metrics = [];
 
 function renderMetrics() {
   var list = document.getElementById('metricList');
   if (!list) return;
   if (metrics.length === 0) {
-    list.innerHTML = '<div class="text-muted" style="padding:8px 0">暂未配置指标，点击下方"添加指标"按钮配置</div>';
+    list.innerHTML = '<div class="text-muted" style="padding:8px 0">暂未配置指标，点击下方「添加指标」按钮配置</div>';
     return;
   }
   list.innerHTML = metrics.map(function(m) {
-    var removeBtn = m.isDefault ? '' : '<span class="metric-remove" onclick="removeMetric(\'' + m.id + '\')" title="删除">&times;</span>';
     return '<div class="metric-row-item" data-metric-id="' + m.id + '">' +
       '<input type="checkbox" class="metric-cb"' + (m.enabled ? ' checked' : '') + ' onchange="toggleMetric(\'' + m.id + '\', this.checked)">' +
       '<span class="metric-name">' + m.name + '</span>' +
       '<span class="metric-unit">阈值：</span>' +
       '<input type="number" class="metric-val" value="' + m.value + '" min="0" max="9999999" placeholder="0-9999999" onchange="updateMetricValue(\'' + m.id + '\', parseInt(this.value) || 0)">' +
-      removeBtn + '</div>';
+      '<span class="metric-remove" onclick="removeMetric(\'' + m.id + '\')" title="删除">&times;</span>' +
+      '</div>';
   }).join('');
 }
 
@@ -1568,9 +1418,7 @@ function cancelForm() {
     showToast('已取消编辑', 'info');
     document.getElementById('strategyName').value = '';
     document.querySelector('input[name="channel"][value="guangdiantong"]').checked = true;
-    document.querySelector('input[name="opDim"][value="project"]').checked = true;
     refreshAll();
-    document.querySelector('input[name="adStatus"][value="repeat"]').checked = true;
     document.getElementById('rejectTypeWrapper').style.display = 'none';
     document.getElementById('createTime').value = '';
     document.getElementById('scheduleTime').value = '02:00';
@@ -1583,11 +1431,8 @@ function cancelForm() {
     document.getElementById('loopLabel').textContent = '未开启';
     document.getElementById('loopHint').textContent = '开启后按设定天数循环执行，关闭则仅执行一次';
     document.getElementById('loopDays').value = 1;
-    metrics = [
-      { id: 'm1', name: '消耗', enabled: true, value: 100, isDefault: true },
-      { id: 'm2', name: '曝光', enabled: true, value: 1000, isDefault: true },
-    ];
-    metricCounter = 2;
+    metrics = [];
+    metricCounter = 0;
     renderMetrics();
   }
 }
@@ -1626,40 +1471,24 @@ function saveStrategy() {
   }
 
   // --- Monitor validation ---
-  var monitorSection = document.getElementById('monitorSection');
-  var monitorData = null;
-  if (monitorSection.style.display !== 'none' && monitorModules.length > 0) {
-    // At least one module must be enabled
-    var enabledModules = monitorModules.filter(function(m) { return m.enabled; });
-    if (enabledModules.length === 0) {
-      showToast('请至少启用一个监控模块', 'error');
-      return;
-    }
+  var monitorData = {};
 
-    monitorData = {};
-
-    // Validate each enabled module
-    for (var i = 0; i < enabledModules.length; i++) {
-      var mod = enabledModules[i];
-
-      if (mod.id === 'materialTag') {
-        var tags = getSelectedMaterialTags();
-        if (tags.length === 0) { showToast('请至少选择一个监控素材标签', 'error'); return; }
-        monitorData.materialTags = tags;
-        var dsRadio = document.querySelector('input[name="deleteScope"]:checked');
-        monitorData.deleteScope = dsRadio ? dsRadio.value : 'ad_only';
-      }
-
-      if (mod.id === 'metrics') {
-        var timeRange = getSelectedTimeRangeLabel();
-        if (!timeRange) { showToast('请选择时间范围', 'error'); return; }
-        var activeMetrics = getActiveMetrics();
-        if (activeMetrics.length === 0) { showToast('请至少配置一个数据指标并启用', 'error'); return; }
-        monitorData.timeRange = timeRange;
-        monitorData.metrics = activeMetrics;
-      }
-    }
+  // 头条 always has 素材标签
+  if (channel === 'toutiao') {
+    var tags = getSelectedMaterialTags();
+    if (tags.length === 0) { showToast('请至少选择一个监控素材标签', 'error'); return; }
+    monitorData.materialTags = tags;
+    var dsRadio = document.querySelector('input[name="deleteScope"]:checked');
+    monitorData.deleteScope = dsRadio ? dsRadio.value : 'ad_only';
   }
+
+  // Data metrics — always available
+  var timeRange = getSelectedTimeRangeLabel();
+  if (!timeRange) { showToast('请选择时间范围', 'error'); return; }
+  var activeMetrics = getActiveMetrics();
+  if (activeMetrics.length === 0) { showToast('请至少添加并启用一个数据指标', 'error'); return; }
+  monitorData.timeRange = timeRange;
+  monitorData.metrics = activeMetrics;
 
   // Build summary
   var channelName = channel === 'guangdiantong' ? '广点通' : '头条';
