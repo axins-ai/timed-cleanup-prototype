@@ -275,6 +275,17 @@
   }
   .checkbox-group-wrap .checkbox-item { padding: 2px 0; }
 
+  /* Radio group wrap - vertical radio list */
+  .radio-group-wrap {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 12px 16px;
+    background: #fafbfc;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    max-width: 520px;
+  }
+  .radio-group-wrap .radio-item { padding: 2px 0; }
+
   /* ==================== TABLE ==================== */
   .table-toolbar {
     display: flex; align-items: center; gap: 16px;
@@ -393,22 +404,60 @@
     box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
   }
 
-  /* Metric row */
-  .metric-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .metric-row .metric-checkbox-group { display: flex; gap: 24px; }
-  .x-input-row {
-    display: inline-flex; align-items: center; gap: 6px;
+  /* ==================== METRIC ROWS (NEW) ==================== */
+  .metric-list { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 560px; }
+  .metric-row-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    background: #fafbfc;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    flex-wrap: wrap;
   }
-  .x-input-row .x-val {
-    width: 64px; height: 32px;
+  .metric-row-item .metric-cb { width: 16px; height: 16px; accent-color: var(--primary); flex-shrink: 0; }
+  .metric-row-item .metric-name {
+    font-size: 14px; color: var(--text); font-weight: 500;
+    min-width: 40px; white-space: nowrap;
+  }
+  .metric-row-item .metric-val {
+    width: 120px; height: 32px;
+    padding: 4px 10px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 14px; color: var(--text); outline: none;
+    text-align: right;
+    transition: all var(--transition);
+    background: var(--bg-white);
+  }
+  .metric-row-item .metric-val:hover { border-color: var(--primary-hover); }
+  .metric-row-item .metric-val:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
+  }
+  .metric-row-item .metric-unit {
+    font-size: 13px; color: var(--text-muted); white-space: nowrap;
+  }
+  .metric-row-item .metric-remove {
+    cursor: pointer; color: var(--danger); font-size: 14px;
+    padding: 2px 6px; border-radius: var(--radius-sm);
+    transition: all var(--transition); flex-shrink: 0;
+  }
+  .metric-row-item .metric-remove:hover { background: #fff1f0; }
+
+  /* X input below radio group */
+  .x-input-below {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 10px; padding-left: 4px;
+  }
+  .x-input-below .x-val {
+    width: 80px; height: 32px;
     text-align: center;
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     font-size: 14px; outline: none;
     transition: all var(--transition);
     background: var(--bg-white);
   }
-  .x-input-row .x-val:hover { border-color: var(--primary-hover); }
-  .x-input-row .x-val:focus {
+  .x-input-below .x-val:hover { border-color: var(--primary-hover); }
+  .x-input-below .x-val:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
   }
@@ -561,17 +610,6 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  /* ==================== DELETE SCOPE RADIO WRAP ==================== */
-  .radio-group-wrap {
-    display: flex; flex-direction: column; gap: 10px;
-    padding: 12px 16px;
-    background: #fafbfc;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-sm);
-    max-width: 480px;
-  }
-  .radio-group-wrap .radio-item { padding: 2px 0; }
-
   /* ==================== MISC ==================== */
   .text-muted { color: var(--text-muted); }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -588,6 +626,9 @@
     transition: opacity 0.3s ease, max-height 0.3s ease;
     overflow: hidden;
   }
+
+  /* Metric action row */
+  .metric-actions { margin-top: 10px; display: flex; gap: 12px; }
 </style>
 </head>
 <body>
@@ -707,7 +748,7 @@
     <div class="section-title">属性配置</div>
 
     <!-- 操作纬度 -->
-    <div class="form-item" id="opDimItem">
+    <div class="form-item">
       <label class="form-label required">
         操作纬度
         <span class="hint-icon" data-tip="选择策略执行的目标层级；广点通支持项目/广告，头条支持项目/广告/素材">?</span>
@@ -715,15 +756,15 @@
       <div class="form-control" style="justify-content:center">
         <div class="radio-group" id="opDimGroup">
           <label class="radio-item">
-            <input type="radio" name="opDim" value="project" checked onchange="refreshMonitorConfig()">
+            <input type="radio" name="opDim" value="project" checked onchange="onOpDimChange()">
             项目
           </label>
           <label class="radio-item">
-            <input type="radio" name="opDim" value="ad" onchange="refreshMonitorConfig()">
+            <input type="radio" name="opDim" value="ad" onchange="onOpDimChange()">
             广告
           </label>
           <label class="radio-item" id="opDimMaterial" style="display:none">
-            <input type="radio" name="opDim" value="material" onchange="refreshMonitorConfig()">
+            <input type="radio" name="opDim" value="material" onchange="onOpDimChange()">
             素材
           </label>
         </div>
@@ -743,7 +784,7 @@
       </div>
     </div>
 
-    <!-- 广告状态 - 广点通专有 -->
+    <!-- 广告状态 - 广点通+广告纬度专有 -->
     <div class="form-item" id="adStatusItem">
       <label class="form-label required">
         广告状态
@@ -769,7 +810,7 @@
       </div>
     </div>
 
-    <!-- 拒审组件类型 - 广点通+审核不通过 -->
+    <!-- 拒审组件类型 - 广点通+广告纬度+审核不通过 -->
     <div class="collapsible-section" id="rejectTypeWrapper" style="display:none">
       <div class="form-item" id="rejectTypeItem">
         <label class="form-label required">
@@ -791,8 +832,8 @@
       </div>
     </div>
 
-    <!-- 广告创建时间 -->
-    <div class="form-item">
+    <!-- 广告创建时间 - 仅广告纬度 -->
+    <div class="form-item" id="createTimeItem">
       <label class="form-label required">广告创建时间</label>
       <div class="form-control" style="justify-content:center">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;max-width:480px">
@@ -809,44 +850,38 @@
   <div class="section" id="monitorSection">
     <div class="section-title">监控配置</div>
 
+    <!-- 时间范围 - Radio Group -->
     <div class="form-item">
       <label class="form-label required">
         时间范围
         <span class="hint-icon" data-tip="根据所选时间范围内的数据指标判断是否执行操作">?</span>
       </label>
-      <div class="form-control" style="justify-content:center">
-        <div class="metric-row" style="width:100%;max-width:520px">
-          <div class="select-wrapper">
-            <select class="select" id="timeRange" onchange="onTimeRangeChange()" style="width:320px">
-              <!-- Populated by JS -->
-            </select>
-            <span class="select-arrow">▼</span>
-          </div>
-          <div class="x-input-row" id="xInputRow" style="display:none">
-            <span style="color:var(--text-secondary);font-size:13px">x=</span>
-            <input type="number" class="x-val" id="xValue" value="1" min="1" max="9999">
-          </div>
+      <div class="form-control">
+        <div class="radio-group-wrap" id="timeRangeGroup" style="max-width:560px">
+          <!-- Populated by JS -->
+        </div>
+        <div class="x-input-below" id="xInputBelow" style="display:none">
+          <span style="color:var(--text-secondary);font-size:14px">输入小时数：</span>
+          <input type="number" class="x-val" id="xValue" value="1" min="1" max="9999">
         </div>
       </div>
     </div>
 
+    <!-- 数据指标 - 可自定义 -->
     <div class="form-item">
-      <label class="form-label required">
+      <label class="form-label">
         数据指标
-        <span class="hint-icon" data-tip="广告维度指标：消耗、曝光">?</span>
+        <span class="hint-icon" data-tip="选配项，可自定义增加；输入范围为 0-9999999">?</span>
       </label>
-      <div class="form-control" style="justify-content:center">
-        <div class="metric-row" style="width:100%;max-width:480px">
-          <div class="metric-checkbox-group">
-            <label class="checkbox-item">
-              <input type="checkbox" name="metric" value="cost" checked>
-              消耗
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="metric" value="impression" checked>
-              曝光
-            </label>
-          </div>
+      <div class="form-control">
+        <div class="metric-list" id="metricList">
+          <!-- Populated by JS -->
+        </div>
+        <div class="metric-actions">
+          <span class="link-btn" onclick="addMetric()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            添加指标
+          </span>
         </div>
       </div>
     </div>
@@ -1047,6 +1082,13 @@ var opDimsByChannel = {
   toutiao: ['项目', '广告', '素材'],
 };
 
+// Metrics - default 2, can add custom
+var metricCounter = 2;
+var metrics = [
+  { id: 'm1', name: '消耗', enabled: true, value: 100, isDefault: true },
+  { id: 'm2', name: '曝光', enabled: true, value: 1000, isDefault: true },
+];
+
 // ===================== HELPERS =====================
 function getChannel() {
   var checked = document.querySelector('input[name="channel"]:checked');
@@ -1068,26 +1110,59 @@ function getSelectedRejectTypes() {
   return Array.from(checked).map(function(cb) { return cb.value; });
 }
 
-function getSelectedMetrics() {
-  var checked = document.querySelectorAll('input[name="metric"]:checked');
-  return Array.from(checked).map(function(cb) { return cb.value; });
-}
-
 function getSelectedMaterialTags() {
   var checked = document.querySelectorAll('input[name="materialTag"]:checked');
   return Array.from(checked).map(function(cb) { return cb.value; });
 }
 
-function getTimeRangeValue() {
-  var select = document.getElementById('timeRange');
-  var label = select.value;
-  var selected = select.options[select.selectedIndex];
-  var hasX = selected && selected.dataset.hasx === 'true';
-  if (hasX) {
+function getActiveMetrics() {
+  return metrics.filter(function(m) { return m.enabled; });
+}
+
+function getSelectedTimeRangeLabel() {
+  var checked = document.querySelector('input[name="timeRangeRadio"]:checked');
+  if (!checked) return '';
+  var label = checked.value;
+  if (checked.dataset.hasx === 'true') {
     var x = document.getElementById('xValue').value || 1;
     return label.replace('x', x);
   }
   return label;
+}
+
+// ===================== OP DIM CHANGE =====================
+function onOpDimChange() {
+  var channel = getChannel();
+  var opDim = getOpDim();
+
+  // Show/hide 素材 option based on channel
+  var materialItem = document.getElementById('opDimMaterial');
+  var dims = opDimsByChannel[channel];
+  materialItem.style.display = (dims && dims.length === 3) ? '' : 'none';
+  // If 素材 is selected but channel doesn't support it, reset
+  if (dims && dims.length === 2 && opDim === 'material') {
+    document.querySelector('input[name="opDim"][value="project"]').checked = true;
+    opDim = 'project';
+  }
+
+  // Ad creation time — only visible for 广告纬度
+  var createTimeItem = document.getElementById('createTimeItem');
+  createTimeItem.style.display = (opDim === 'ad') ? '' : 'none';
+
+  // Ad status — only visible for 广点通 + 广告纬度
+  var adStatusItem = document.getElementById('adStatusItem');
+  var shouldShowAdStatus = (channel === 'guangdiantong' && opDim === 'ad');
+  adStatusItem.style.display = shouldShowAdStatus ? '' : 'none';
+  if (!shouldShowAdStatus) {
+    document.getElementById('rejectTypeWrapper').style.display = 'none';
+    document.querySelectorAll('input[name="rejectType"]').forEach(function(cb) { cb.checked = false; });
+  } else {
+    // Re-check ad status when re-showing
+    onAdStatusChange();
+  }
+
+  // Refresh monitor config
+  refreshMonitorConfig();
 }
 
 // ===================== REFRESH ALL =====================
@@ -1103,30 +1178,23 @@ function refreshAll() {
     ? '项目对应广点通单元层级，支持多选'
     : '项目对应头条计划层级，支持多选');
 
-  // 3) Show/hide ad status (广点通专有)
-  document.getElementById('adStatusItem').style.display = channel === 'guangdiantong' ? '' : 'none';
-  // Hide reject type when switching channels
-  document.getElementById('rejectTypeWrapper').style.display = 'none';
-  // Reset ad status to 重复投放 when switching to 广点通
-  if (channel === 'guangdiantong') {
-    document.querySelector('input[name="adStatus"][value="repeat"]').checked = true;
-    document.querySelectorAll('input[name="rejectType"]').forEach(function(cb) { cb.checked = false; });
-  }
-
-  // 4) Operation dimension visibility (素材 only for 头条)
+  // 3) Operation dimension visibility (素材 only for 头条)
   var dims = opDimsByChannel[channel];
   var materialItem = document.getElementById('opDimMaterial');
-  materialItem.style.display = dims.length === 3 ? '' : 'none';
-  // If current selection is 素材 and channel is 广点通, reset to 项目
-  var materialRadio = document.querySelector('input[name="opDim"][value="material"]');
-  if (dims.length === 2 && materialRadio && materialRadio.checked) {
-    document.querySelector('input[name="opDim"][value="project"]').checked = true;
+  materialItem.style.display = (dims && dims.length === 3) ? '' : 'none';
+  // Reset 素材 → 项目 if switching to 广点通
+  if (dims && dims.length === 2) {
+    var materialRadio = document.querySelector('input[name="opDim"][value="material"]');
+    if (materialRadio && materialRadio.checked) {
+      document.querySelector('input[name="opDim"][value="project"]').checked = true;
+    }
   }
 
-  // 5) Refresh monitor config
-  refreshMonitorConfig();
+  // 4) Trigger opDim change to refresh conditional fields
+  onOpDimChange();
 }
 
+// ===================== REFRESH MONITOR CONFIG =====================
 function refreshMonitorConfig() {
   var channel = getChannel();
   var opDim = getOpDim();
@@ -1143,16 +1211,24 @@ function refreshMonitorConfig() {
 
   monitorSection.style.display = '';
 
-  // Render time range
+  // Render time range radio group
   var timeOptions = monitorTimeRanges[channel] && monitorTimeRanges[channel][opDim];
   if (timeOptions) {
-    var select = document.getElementById('timeRange');
-    select.innerHTML = timeOptions.map(function(opt) {
-      return '<option value="' + opt.label + '" data-hasx="' + opt.hasX + '">' + opt.label + '</option>';
+    var groupEl = document.getElementById('timeRangeGroup');
+    var html = timeOptions.map(function(opt, idx) {
+      return '<label class="radio-item">' +
+        '<input type="radio" name="timeRangeRadio" value="' + opt.label + '" data-hasx="' + opt.hasX + '"' +
+        (idx === 0 ? ' checked' : '') +
+        ' onchange="onTimeRangeRadioChange()">' +
+        opt.label +
+      '</label>';
     }).join('');
-    select.value = timeOptions[0].label;
-    onTimeRangeChange();
+    groupEl.innerHTML = html;
+    onTimeRangeRadioChange();
   }
+
+  // Render metrics list
+  renderMetrics();
 
   // Show/hide material extra fields (only 头条 + 素材)
   document.getElementById('materialExtraFields').style.display = (channel === 'toutiao' && opDim === 'material') ? '' : 'none';
@@ -1172,22 +1248,22 @@ function renderProjectStatus(channel) {
   document.getElementById('projectStatusGroup').innerHTML = html;
 }
 
-// ===================== TIME RANGE CHANGE =====================
-function onTimeRangeChange() {
-  var select = document.getElementById('timeRange');
-  var selected = select.options[select.selectedIndex];
-  var hasX = selected && selected.dataset.hasx === 'true';
-  document.getElementById('xInputRow').style.display = hasX ? 'inline-flex' : 'none';
+// ===================== TIME RANGE RADIO CHANGE =====================
+function onTimeRangeRadioChange() {
+  var checked = document.querySelector('input[name="timeRangeRadio"]:checked');
+  var hasX = checked && checked.dataset.hasx === 'true';
+  document.getElementById('xInputBelow').style.display = hasX ? '' : 'none';
 }
 
 // ===================== AD STATUS CHANGE =====================
 function onAdStatusChange() {
   var channel = getChannel();
-  if (channel !== 'guangdiantong') return;
+  var opDim = getOpDim();
+  if (!(channel === 'guangdiantong' && opDim === 'ad')) return;
 
   var rejectedRadio = document.querySelector('input[name="adStatus"][value="rejected"]');
   var wrapper = document.getElementById('rejectTypeWrapper');
-  if (rejectedRadio.checked) {
+  if (rejectedRadio && rejectedRadio.checked) {
     wrapper.style.display = '';
     wrapper.style.opacity = '1';
     wrapper.style.maxHeight = '100px';
@@ -1199,7 +1275,64 @@ function onAdStatusChange() {
   }
 }
 
-// ===================== TOAST =====================
+// ===================== METRICS RENDERING =====================
+function renderMetrics() {
+  var list = document.getElementById('metricList');
+  if (metrics.length === 0) {
+    list.innerHTML = '<div class="text-muted" style="padding:8px 0">暂未配置指标，点击下方"添加指标"按钮配置</div>';
+    return;
+  }
+  list.innerHTML = metrics.map(function(m, idx) {
+    var removeBtn = '';
+    if (!m.isDefault) {
+      removeBtn = '<span class="metric-remove" onclick="removeMetric(\'' + m.id + '\')" title="删除此指标">×</span>';
+    }
+    return '<div class="metric-row-item" data-metric-id="' + m.id + '">' +
+      '<input type="checkbox" class="metric-cb"' + (m.enabled ? ' checked' : '') +
+        ' onchange="toggleMetric(\'' + m.id + '\', this.checked)">' +
+      '<span class="metric-name">' + m.name + '</span>' +
+      '<span class="metric-unit">阈值：</span>' +
+      '<input type="number" class="metric-val" value="' + m.value +
+        '" min="0" max="9999999" placeholder="0-9999999"' +
+        ' onchange="updateMetricValue(\'' + m.id + '\', parseInt(this.value) || 0)">' +
+      removeBtn +
+    '</div>';
+  }).join('');
+}
+
+function toggleMetric(id, checked) {
+  var m = metrics.find(function(x) { return x.id === id; });
+  if (m) { m.enabled = checked; }
+}
+
+function updateMetricValue(id, val) {
+  var m = metrics.find(function(x) { return x.id === id; });
+  if (m) {
+    m.value = Math.max(0, Math.min(9999999, val || 0));
+  }
+}
+
+function addMetric() {
+  metricCounter++;
+  var newId = 'm' + metricCounter;
+  metrics.push({
+    id: newId,
+    name: '指标' + metricCounter,
+    enabled: true,
+    value: 0,
+    isDefault: false
+  });
+  renderMetrics();
+  showToast('已添加新指标，请修改名称和阈值', 'info');
+}
+
+function removeMetric(id) {
+  metrics = metrics.filter(function(m) { return m.id !== id; });
+  renderMetrics();
+  showToast('已删除指标', 'info');
+}
+
+// ==================== TOAST ====================
 function showToast(message, type) {
   type = type || 'info';
   var container = document.getElementById('toastContainer');
@@ -1363,6 +1496,13 @@ function cancelForm() {
     document.getElementById('loopLabel').textContent = '未开启';
     document.getElementById('loopHint').textContent = '开启后按设定天数循环执行，关闭则仅执行一次';
     document.getElementById('loopDays').value = 1;
+    // Reset metrics
+    metrics = [
+      { id: 'm1', name: '消耗', enabled: true, value: 100, isDefault: true },
+      { id: 'm2', name: '曝光', enabled: true, value: 1000, isDefault: true },
+    ];
+    metricCounter = 2;
+    renderMetrics();
   }
 }
 
@@ -1371,9 +1511,8 @@ function saveStrategy() {
   var channel = getChannel();
   var opDim = getOpDim();
   var projectStatusArr = getSelectedProjectStatus();
-  var createTime = document.getElementById('createTime').value;
-  var timeRange = getTimeRangeValue();
-  var metrics = getSelectedMetrics();
+  var timeRange = getSelectedTimeRangeLabel();
+  var activeMetrics = getActiveMetrics();
   var opType = document.getElementById('opType').value;
   var scheduleTime = document.getElementById('scheduleTime').value;
   var loopActive = document.getElementById('loopSwitch').classList.contains('active');
@@ -1393,16 +1532,21 @@ function saveStrategy() {
     showToast('请至少选择一个账号集', 'error');
     return;
   }
-  if (!createTime) {
-    showToast('请输入广告创建时间阈值', 'error');
-    document.getElementById('createTime').focus();
-    return;
+
+  // Ad creation time — only for 广告纬度
+  if (opDim === 'ad') {
+    var createTime = document.getElementById('createTime').value;
+    if (!createTime) {
+      showToast('请输入广告创建时间阈值', 'error');
+      document.getElementById('createTime').focus();
+      return;
+    }
   }
 
-  // Ad status validation — only for 广点通
+  // Ad status validation — only for 广点通 + 广告纬度
   var adStatus = null;
   var rejectTypes = null;
-  if (channel === 'guangdiantong') {
+  if (channel === 'guangdiantong' && opDim === 'ad') {
     var adStatusRadio = document.querySelector('input[name="adStatus"]:checked');
     adStatus = adStatusRadio ? adStatusRadio.value : 'repeat';
     if (adStatus === 'rejected') {
@@ -1417,12 +1561,16 @@ function saveStrategy() {
   // Monitor config validation — only when the section is visible
   var monitorSection = document.getElementById('monitorSection');
   if (monitorSection.style.display !== 'none') {
-    if (metrics.length === 0) {
-      showToast('请至少选择一个数据指标', 'error');
+    if (!timeRange) {
+      showToast('请选择时间范围', 'error');
+      return;
+    }
+    if (activeMetrics.length === 0) {
+      showToast('请至少配置一个数据指标并启用', 'error');
       return;
     }
     // Material extra validation
-    if (getChannel() === 'toutiao' && getOpDim() === 'material') {
+    if (channel === 'toutiao' && opDim === 'material') {
       var tags = getSelectedMaterialTags();
       if (tags.length === 0) {
         showToast('请至少选择一个监控素材标签', 'error');
@@ -1438,8 +1586,6 @@ function saveStrategy() {
     : { enabled: '启用中', not_delivering: '未投放', completed: '已完成' };
   var projectStatusText = projectStatusArr.map(function(v) { return statusLabels[v] || v; }).join('、');
   var dimLabels = { project: '项目', ad: '广告', material: '素材' };
-  var metricLabels = { cost: '消耗', impression: '曝光' };
-  var metricText = metrics.map(function(m) { return metricLabels[m] || m; }).join('、');
 
   var data = {
     name: name,
@@ -1449,11 +1595,11 @@ function saveStrategy() {
     projectStatus: projectStatusText,
     adStatus: adStatus === 'repeat' ? '重复投放' : (adStatus === 'rejected' ? '审核不通过' : null),
     rejectTypes: rejectTypes,
-    createTimeThreshold: createTime + '小时',
+    createTimeThreshold: opDim === 'ad' ? (document.getElementById('createTime').value + '小时') : null,
     timeRange: monitorSection.style.display !== 'none' ? timeRange : null,
-    metrics: monitorSection.style.display !== 'none' ? metricText : null,
-    materialTags: getChannel() === 'toutiao' && getOpDim() === 'material' ? getSelectedMaterialTags() : undefined,
-    deleteScope: getChannel() === 'toutiao' && getOpDim() === 'material'
+    metrics: monitorSection.style.display !== 'none' ? activeMetrics : null,
+    materialTags: channel === 'toutiao' && opDim === 'material' ? getSelectedMaterialTags() : undefined,
+    deleteScope: channel === 'toutiao' && opDim === 'material'
       ? (document.querySelector('input[name="deleteScope"]:checked') || {}).value
       : undefined,
     opType: opType === 'delete' ? '删除' : '暂停',
@@ -1469,6 +1615,7 @@ function saveStrategy() {
 renderAccountTable();
 renderProjectStatus('guangdiantong');
 refreshAll();
+renderMetrics();
 
 // Close modal on overlay click
 document.getElementById('accountModal').addEventListener('click', function(e) {
