@@ -699,6 +699,45 @@
     overflow: hidden;
   }
   .metric-actions { margin-top: 10px; display: flex; gap: 12px; }
+
+  /* ==================== METRIC TYPE TABS (segmented) ==================== */
+  .metric-tabs {
+    display: flex; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden;
+    width: fit-content; margin-bottom: 14px;
+  }
+  .metric-tab {
+    padding: 7px 18px; cursor: pointer; font-size: 13px; font-weight: 500;
+    color: var(--text-secondary); background: var(--bg-white);
+    border-right: 1px solid var(--border); transition: all var(--transition);
+    user-select: none; white-space: nowrap;
+  }
+  .metric-tab:last-child { border-right: none; }
+  .metric-tab:hover { color: var(--primary); background: var(--primary-bg); }
+  .metric-tab.active { background: var(--primary); color: #fff; }
+  .metric-cat-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+  .metric-gate-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .metric-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 8px 12px; border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm); margin-bottom: 8px; background: #fff;
+  }
+  .metric-row.disabled { opacity: 0.55; }
+  .metric-row .metric-name { font-size: 14px; color: var(--text); font-weight: 500; min-width: 120px; }
+  .metric-row .metric-range { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .metric-row .metric-range input {
+    width: 100px; height: 32px; padding: 4px 10px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 14px; text-align: right; outline: none; transition: all var(--transition);
+    background: var(--bg-white);
+  }
+  .metric-row .metric-range input:hover { border-color: var(--primary-hover); }
+  .metric-row .metric-range input:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
+  }
+  .metric-row .metric-unit { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+  .metric-row .metric-tilde { color: var(--text-muted); padding: 0 2px; }
+  .metric-empty { color: var(--text-muted); font-size: 14px; padding: 8px 0; }
 </style>
 </head>
 <body>
@@ -807,23 +846,18 @@
   <div class="section">
     <div class="section-title">属性配置</div>
 
-    <!-- 操作纬度 - 按渠道限制可选 -->
+    <!-- 监控纬度 - 新增 -->
     <div class="form-item">
       <label class="form-label required">
-        操作纬度
-        <span class="hint-icon" data-tip="选择策略执行的目标层级；广点通仅限广告纬度，头条仅限素材纬度">?</span>
+        监控纬度
+        <span class="hint-icon" data-tip="选择监控的目标层级：账户 / 项目 / 广告 / 素材">?</span>
       </label>
       <div class="form-control" style="justify-content:center">
-        <div class="radio-group" id="opDimGroup">
-          <label class="radio-item" id="opDimProject">
-            <input type="radio" name="opDim" value="project">项目
-          </label>
-          <label class="radio-item" id="opDimAd">
-            <input type="radio" name="opDim" value="ad">广告
-          </label>
-          <label class="radio-item" id="opDimMaterial">
-            <input type="radio" name="opDim" value="material">素材
-          </label>
+        <div class="radio-group" id="monitorDimGroup">
+          <label class="radio-item"><input type="radio" name="monitorDim" value="account" onchange="onMonitorDimChange()">账户</label>
+          <label class="radio-item"><input type="radio" name="monitorDim" value="project" onchange="onMonitorDimChange()">项目</label>
+          <label class="radio-item"><input type="radio" name="monitorDim" value="ad" checked onchange="onMonitorDimChange()">广告</label>
+          <label class="radio-item"><input type="radio" name="monitorDim" value="material" onchange="onMonitorDimChange()">素材</label>
         </div>
       </div>
     </div>
@@ -856,6 +890,18 @@
   <!-- ==================== 三、监控配置 ==================== -->
   <div class="section" id="monitorSection">
     <div class="section-title">监控配置</div>
+
+    <!-- 监控配置纬度：投放指标 / 产品（产品暂置灰） -->
+    <div class="form-item">
+      <label class="form-label required">纬度</label>
+      <div class="form-control" style="justify-content:center">
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="monitorType" value="delivery" checked onchange="onMonitorTypeChange()">投放指标</label>
+          <label class="radio-item disabled"><input type="radio" name="monitorType" value="product" disabled>产品（暂未开放）</label>
+        </div>
+      </div>
+    </div>
+
     <div id="monitorContent">
       <!-- Rendered by JS dynamically -->
     </div>
@@ -864,6 +910,21 @@
   <!-- ==================== 四、操作配置 ==================== -->
   <div class="section">
     <div class="section-title">操作配置</div>
+
+    <!-- 操作纬度 - 联动监控纬度 -->
+    <div class="form-item">
+      <label class="form-label required">
+        操作纬度
+        <span class="hint-icon" data-tip="由监控纬度联动：账户/项目→项目/广告，广告→广告/素材，素材→仅素材">?</span>
+      </label>
+      <div class="form-control" style="justify-content:center">
+        <div class="radio-group" id="opDimGroup">
+          <label class="radio-item" id="opDimProject"><input type="radio" name="opDim" value="project">项目</label>
+          <label class="radio-item" id="opDimAd"><input type="radio" name="opDim" value="ad" checked>广告</label>
+          <label class="radio-item" id="opDimMaterial"><input type="radio" name="opDim" value="material">素材</label>
+        </div>
+      </div>
+    </div>
 
     <div class="form-item">
       <label class="form-label required">操作类型</label>
@@ -981,13 +1042,6 @@ var monitorTimeRanges = {
   }
 };
 
-// Op dim restriction: which dim is the ONLY selectable one per channel
-// guangdiantong → only 'ad'; toutiao → only 'material'
-var allowedOpDimByChannel = {
-  guangdiantong: 'ad',
-  toutiao: 'material'
-};
-
 // ===================== HELPERS =====================
 function getChannel() {
   var checked = document.querySelector('input[name="channel"]:checked');
@@ -997,6 +1051,25 @@ function getChannel() {
 function getOpDim() {
   var checked = document.querySelector('input[name="opDim"]:checked');
   return checked ? checked.value : 'project';
+}
+
+function getMonitorDim() {
+  var checked = document.querySelector('input[name="monitorDim"]:checked');
+  return checked ? checked.value : 'ad';
+}
+
+// 监控纬度 → 操作纬度 联动映射
+var monitorDimOptions = { account: '账户', project: '项目', ad: '广告', material: '素材' };
+var opDimOptions = { project: '项目', ad: '广告', material: '素材' };
+var opDimByMonitorDim = {
+  account: ['project', 'ad'],    // 账户 → 项目/广告（素材不可选）
+  project: ['project', 'ad'],    // 项目 → 项目/广告
+  ad: ['ad', 'material'],        // 广告 → 广告/素材
+  material: ['material']         // 素材 → 仅素材
+};
+
+function opDimItemId(dim) {
+  return 'opDim' + dim.charAt(0).toUpperCase() + dim.slice(1);
 }
 
 function getSelectedProjectStatus() {
@@ -1014,9 +1087,7 @@ function getSelectedMaterialTags() {
   return Array.from(checked).map(function(cb) { return cb.value; });
 }
 
-function getActiveMetrics() {
-  return metrics.filter(function(m) { return m.enabled; });
-}
+function getActiveMetrics() { return getSelectedMetrics(); }
 
 function getSelectedTimeRangeLabel() {
   var chip = document.querySelector('.time-range-chip.active');
@@ -1038,54 +1109,35 @@ function selectTimeRangeChip(chipEl) {
   if (xBelow) xBelow.style.display = hasX ? '' : 'none';
 }
 
-// ===================== OP DIM — channel-based restriction =====================
-function updateOpDimRestrictions() {
-  var channel = getChannel();
-  var allowed = allowedOpDimByChannel[channel];
+// ===================== 监控纬度 → 操作纬度 联动 =====================
+function updateOpDimByMonitorDim() {
+  var md = getMonitorDim();
+  var allowed = opDimByMonitorDim[md] || ['project'];
 
-  var projectItem = document.getElementById('opDimProject');
-  var adItem = document.getElementById('opDimAd');
-  var materialItem = document.getElementById('opDimMaterial');
-
-  // Enable all first
-  [projectItem, adItem, materialItem].forEach(function(item) {
-    item.classList.remove('disabled');
+  ['project', 'ad', 'material'].forEach(function(dim) {
+    var item = document.getElementById(opDimItemId(dim));
     var radio = item.querySelector('input[type="radio"]');
-    if (radio) radio.disabled = false;
+    if (allowed.indexOf(dim) >= 0) {
+      item.classList.remove('disabled');
+      radio.disabled = false;
+    } else {
+      item.classList.add('disabled');
+      radio.disabled = true;
+      radio.checked = false;
+    }
   });
 
-  // 素材 always visible, but disabled for guangdiantong
-  materialItem.style.display = '';
-
-  // Disable non-allowed options based on channel
-  if (channel === 'guangdiantong') {
-    // Only ad is selectable
-    projectItem.classList.add('disabled');
-    projectItem.querySelector('input[type="radio"]').disabled = true;
-    materialItem.classList.add('disabled');
-    materialItem.querySelector('input[type="radio"]').disabled = true;
-    // Auto-select ad
-    adItem.querySelector('input[type="radio"]').checked = true;
-  } else if (channel === 'toutiao') {
-    // Only material is selectable
-    projectItem.classList.add('disabled');
-    projectItem.querySelector('input[type="radio"]').disabled = true;
-    adItem.classList.add('disabled');
-    adItem.querySelector('input[type="radio"]').disabled = true;
-    // Auto-select material
-    materialItem.querySelector('input[type="radio"]').checked = true;
+  // 若当前选中的操作纬度不在允许列表，自动选第一个允许的
+  var cur = getOpDim();
+  if (allowed.indexOf(cur) < 0) {
+    var firstItem = document.getElementById(opDimItemId(allowed[0]));
+    firstItem.querySelector('input[type="radio"]').checked = true;
   }
-
-  onOpDimChange();
 }
 
-function onOpDimChange() {
-  var opDim = getOpDim();
-
-  // Ad creation time — only for 广告纬度
-  document.getElementById('createTimeItem').style.display = (opDim === 'ad') ? '' : 'none';
-
-  // Refresh monitor config (广告状态/素材标签 now live inside 监控配置)
+function onMonitorDimChange() {
+  updateOpDimByMonitorDim();
+  document.getElementById('createTimeItem').style.display = (getOpDim() === 'ad') ? '' : 'none';
   refreshMonitorConfig();
 }
 
@@ -1098,7 +1150,7 @@ function refreshAll() {
     ? '项目对应广点通单元层级，支持多选'
     : '项目对应头条计划层级，支持多选');
 
-  updateOpDimRestrictions();
+  updateOpDimByMonitorDim();
 }
 
 // ===================== REFRESH MONITOR CONFIG =====================
@@ -1186,52 +1238,46 @@ function refreshMonitorConfig() {
     html += '</div>'; // sub-section
   }
 
-  // --- 数据指标配置 (always) ---
+  // --- 数据指标配置 (always, when 投放指标) ---
   var timeOptions = (monitorTimeRanges[channel] && monitorTimeRanges[channel][opDim]) || [];
   html += '<div class="sub-section">';
   html += blockHeader('数据指标配置', 'metrics');
   html += '<div class="sub-section-body" id="body_metrics" style="' + (monitorEnabled.metrics ? '' : 'display:none') + '">';
 
-  // Time range chips
+  // Time range chips（数据指标均需配置时间范围）
   html += '  <div style="margin-bottom:16px">';
   html += '    <div style="display:flex;align-items:center;margin-bottom:8px">';
   html += '      <span style="font-size:14px;font-weight:600;color:var(--text)">时间范围</span>';
-  html += '      <span class="hint-icon" data-tip="根据所选时间范围内的数据指标判断是否执行操作">?</span>';
+  html += '      <span class="hint-icon" data-tip="数据指标均需配置时间范围，作为判断阈值的时间窗口">?</span>';
   html += '    </div>';
-  html += '    <div class="time-range-chips">';
-  timeOptions.forEach(function(opt, idx) {
-    html += '<span class="time-range-chip' + (idx === 0 ? ' active' : '') + '" data-hasx="' + opt.hasX + '" onclick="selectTimeRangeChip(this)">' + opt.label + '</span>';
-  });
-  html += '    </div>';
-  html += '    <div class="x-input-below" id="xInputBelow" style="display:' + (timeOptions.length > 0 && timeOptions[0].hasX ? '' : 'none') + '">';
-  html += '      <span style="color:var(--text-secondary);font-size:14px">输入小时数：</span>';
-  html += '      <input type="number" class="x-val" id="xValue" value="' + xValueState + '" min="1" max="9999" oninput="xValueState=parseInt(this.value)||1">';
-  html += '    </div>';
+  if (timeOptions.length > 0) {
+    html += '    <div class="time-range-chips">';
+    timeOptions.forEach(function(opt, idx) {
+      html += '<span class="time-range-chip' + (idx === 0 ? ' active' : '') + '" data-hasx="' + opt.hasX + '" onclick="selectTimeRangeChip(this)">' + opt.label + '</span>';
+    });
+    html += '    </div>';
+    html += '    <div class="x-input-below" id="xInputBelow" style="display:' + (timeOptions[0].hasX ? '' : 'none') + '">';
+    html += '      <span style="color:var(--text-secondary);font-size:14px">输入小时数：</span>';
+    html += '      <input type="number" class="x-val" id="xValue" value="' + xValueState + '" min="1" max="9999" oninput="xValueState=parseInt(this.value)||1">';
+    html += '    </div>';
+  } else {
+    html += '    <div class="metric-empty">当前渠道 / 纬度暂无可用的数据指标时间范围</div>';
+  }
   html += '  </div>';
 
-  // Metrics — 仅可添加 曝光 / 消耗，区间类型
-  html += '  <div>';
-  html += '    <div style="display:flex;align-items:center;margin-bottom:8px">';
-  html += '      <span style="font-size:14px;font-weight:600;color:var(--text)">数据指标</span>';
-  html += '      <span class="hint-icon" data-tip="可添加「曝光」或「消耗」，配置区间阈值（min~max），范围为 0-9999999">?</span>';
-  html += '    </div>';
-  html += '    <div class="metric-list" id="metricList"></div>';
-  html += '    <div class="metric-actions">';
-  html += '      <div class="metric-picker-wrap">';
-  html += '        <span class="link-btn" onclick="toggleMetricPicker()">';
-  html += '          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>添加指标';
-  html += '        </span>';
-  html += '        <div class="metric-picker" id="metricPicker" style="display:none"></div>';
-  html += '      </div>';
-  html += '    </div>';
+  // 指标分类 Tab
+  html += '  <div class="metric-tabs">';
+  html += '    <div class="metric-tab' + (metricTab === 'ad' ? ' active' : '') + '" data-type="ad" onclick="switchMetricTab(\'ad\')">广告指标</div>';
+  html += '    <div class="metric-tab' + (metricTab === 'business' ? ' active' : '') + '" data-type="business" onclick="switchMetricTab(\'business\')">业务指标</div>';
+  html += '    <div class="metric-tab' + (metricTab === 'province' ? ' active' : '') + '" data-type="province" onclick="switchMetricTab(\'province\')">省份运营商指标</div>';
   html += '  </div>';
+  html += '  <div id="metricTabContent"></div>';
 
   html += '</div>'; // sub-section-body
   html += '</div>'; // sub-section
 
   container.innerHTML = html;
-  renderMetrics();
-  renderMetricPicker();
+  renderMetricTab();
 }
 
 // ===================== PROJECT STATUS RENDER =====================
@@ -1262,93 +1308,135 @@ function onAdStatusChange() {
   }
 }
 
-// ===================== METRICS — 曝光/消耗，区间类型 =====================
+// ===================== METRICS — 广告/业务/省份运营商指标 =====================
 var adStatusState = 'repeat';
 var rejectTypeState = [];
-var metricCounter = 0;
-var metrics = [];
-
 // 监控配置各子块开关状态（至少开启一个；默认数据指标开启）
 var monitorEnabled = { adStatus: false, materialTag: false, metrics: true };
 var xValueState = 1;
 
-// 仅可添加的预设指标
-var metricPresets = [
-  { key: 'exposure', name: '曝光', unit: '次' },
-  { key: 'cost', name: '消耗', unit: '元' }
-];
-
-function isMetricAdded(key) {
-  return metrics.some(function(m) { return m.key === key; });
-}
-
-function renderMetrics() {
-  var list = document.getElementById('metricList');
-  if (!list) return;
-  if (metrics.length === 0) {
-    list.innerHTML = '<div class="text-muted" style="padding:8px 0">暂未配置指标，点击下方「添加指标」选择「曝光」或「消耗」</div>';
-    return;
+// 数据指标类型定义
+var metricDefs = {
+  ad: {
+    title: '广告指标',
+    items: [
+      { key: 'cost', name: '消耗', unit: '元' },
+      { key: 'click', name: '点击', unit: '次' },
+      { key: 'convert', name: '转化', unit: '次' }
+    ]
+  },
+  business: {
+    title: '业务指标',
+    items: [
+      { key: 'success_order', name: '成功订单数', unit: '单' }
+    ]
+  },
+  province: {
+    title: '省份运营商指标',
+    items: [
+      { key: 'avg_success_order', name: '队列人均成功订单数', unit: '单' },
+      { key: 'exposure_user', name: '队列曝光用户数', unit: '人' },
+      { key: 'r_value', name: '队列R值', unit: '' }
+    ],
+    maxSelect: 3
   }
-  list.innerHTML = metrics.map(function(m) {
-    return '<div class="metric-row-item" data-metric-id="' + m.id + '">' +
-      '<input type="checkbox" class="metric-cb"' + (m.enabled ? ' checked' : '') + ' onchange="toggleMetric(\'' + m.id + '\', this.checked)">' +
-      '<span class="metric-name">' + m.name + '</span>' +
-      '<span class="metric-unit">区间：</span>' +
-      '<input type="number" class="metric-val" value="' + m.min + '" min="0" max="9999999" placeholder="最小值" onchange="updateMetricRange(\'' + m.id + '\', \'min\', parseInt(this.value) || 0)">' +
-      '<span class="metric-tilde">~</span>' +
-      '<input type="number" class="metric-val" value="' + m.max + '" min="0" max="9999999" placeholder="最大值" onchange="updateMetricRange(\'' + m.id + '\', \'max\', parseInt(this.value) || 9999999)">' +
-      '<span class="metric-unit">' + m.unit + '</span>' +
-      '<span class="metric-remove" onclick="removeMetric(\'' + m.id + '\')" title="删除">&times;</span>' +
-      '</div>';
-  }).join('');
+};
+
+// 已选指标及其区间：key -> {min, max}
+var metricRanges = {};
+// 当前显示的指标分类 tab
+var metricTab = 'ad';
+// 省份运营商选择
+var provinceSel = { operator: '', province: '' };
+
+var operatorOptions = ['中国移动', '中国联通', '中国电信'];
+var provinceOptions = ['北京', '上海', '广东', '江苏', '浙江', '四川', '湖北', '湖南', '山东', '河南', '福建', '安徽', '江西', '陕西', '辽宁', '重庆', '天津', '河北', '广西', '云南', '贵州', '山西', '吉林', '黑龙江', '甘肃', '海南', '内蒙古', '宁夏', '青海', '新疆', '西藏'];
+
+function findMetricDef(key) {
+  for (var t in metricDefs) {
+    var found = metricDefs[t].items.filter(function(it) { return it.key === key; })[0];
+    if (found) return found;
+  }
+  return null;
 }
 
-function renderMetricPicker() {
-  var picker = document.getElementById('metricPicker');
-  if (!picker) return;
-  picker.innerHTML = metricPresets.map(function(p) {
-    var added = isMetricAdded(p.key);
-    return '<div class="metric-picker-item' + (added ? ' disabled' : '') + '"' + (added ? '' : ' onclick="addMetric(\'' + p.key + '\')"') + '>' +
-      '<span>' + p.name + '</span>' + (added ? '<span class="added-tag">已添加</span>' : '') + '</div>';
-  }).join('');
+function toggleMetric(key, checked) {
+  if (checked) {
+    if (!(key in metricRanges)) metricRanges[key] = { min: 0, max: 9999999 };
+  } else {
+    delete metricRanges[key];
+  }
+  renderMetricTab();
 }
 
-function toggleMetricPicker() {
-  var picker = document.getElementById('metricPicker');
-  if (!picker) return;
-  renderMetricPicker();
-  picker.style.display = picker.style.display === 'none' ? '' : 'none';
+function updateMetricRange(key, field, val) {
+  if (!(key in metricRanges)) metricRanges[key] = { min: 0, max: 9999999 };
+  var v = parseInt(val);
+  if (isNaN(v)) v = field === 'min' ? 0 : 9999999;
+  metricRanges[key][field] = Math.max(0, Math.min(9999999, v));
 }
 
-function toggleMetric(id, checked) {
-  var m = metrics.find(function(x) { return x.id === id; });
-  if (m) m.enabled = checked;
+function switchMetricTab(type) {
+  metricTab = type;
+  renderMetricTab();
 }
 
-function updateMetricRange(id, field, val) {
-  var m = metrics.find(function(x) { return x.id === id; });
-  if (!m) return;
-  m[field] = Math.max(0, Math.min(9999999, val || 0));
+function onMonitorTypeChange() {
+  refreshMonitorConfig();
 }
 
-function addMetric(key) {
-  var preset = metricPresets.find(function(p) { return p.key === key; });
-  if (!preset) return;
-  if (isMetricAdded(key)) { showToast('「' + preset.name + '」已添加', 'info'); return; }
-  metricCounter++;
-  metrics.push({ id: 'm' + metricCounter, key: key, name: preset.name, unit: preset.unit, enabled: true, min: 0, max: 9999999 });
-  renderMetrics();
-  renderMetricPicker();
-  var picker = document.getElementById('metricPicker');
-  if (picker) picker.style.display = 'none';
-  showToast('已添加指标「' + preset.name + '」，请配置区间', 'info');
+function renderMetricTab() {
+  var tabContent = document.getElementById('metricTabContent');
+  if (!tabContent) return;
+
+  // 更新 tab 高亮
+  document.querySelectorAll('.metric-tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.type === metricTab);
+  });
+
+  var def = metricDefs[metricTab];
+  var html = '<div class="metric-cat-title">' + def.title + '</div>';
+
+  // 省份运营商指标：需先选运营商 + 省份
+  if (metricTab === 'province') {
+    var gateOk = provinceSel.operator && provinceSel.province;
+    html += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">';
+    html += '  <div class="select-wrapper"><select class="select" style="width:160px" onchange="provinceSel.operator=this.value;renderMetricTab()"><option value="">选择运营商</option>' +
+      operatorOptions.map(function(o) { return '<option' + (provinceSel.operator === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></div>';
+    html += '  <div class="select-wrapper"><select class="select" style="width:160px" onchange="provinceSel.province=this.value;renderMetricTab()"><option value="">选择省份</option>' +
+      provinceOptions.map(function(p) { return '<option' + (provinceSel.province === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select></div>';
+    html += '</div>';
+    if (!gateOk) {
+      html += '<div class="metric-gate-hint">请先选择运营商和省份，再配置指标（最多 3 个）</div>';
+    }
+  }
+
+  def.items.forEach(function(it) {
+    var selected = (it.key in metricRanges);
+    var disabled = (metricTab === 'province' && !(provinceSel.operator && provinceSel.province));
+    html += '<div class="metric-row' + (disabled ? ' disabled' : '') + '">';
+    html += '  <label class="checkbox-item"><input type="checkbox"' + (selected ? ' checked' : '') + (disabled ? ' disabled' : '') + ' onchange="toggleMetric(\'' + it.key + '\', this.checked)">' + it.name + '</label>';
+    if (selected) {
+      var r = metricRanges[it.key];
+      html += '  <div class="metric-range">';
+      html += '    <span class="metric-unit">区间：</span>';
+      html += '    <input type="number" min="0" max="9999999" value="' + r.min + '" placeholder="最小值" onchange="updateMetricRange(\'' + it.key + '\', \'min\', this.value)">';
+      html += '    <span class="metric-tilde">~</span>';
+      html += '    <input type="number" min="0" max="9999999" value="' + r.max + '" placeholder="最大值" onchange="updateMetricRange(\'' + it.key + '\', \'max\', this.value)">';
+      html += '    <span class="metric-unit">' + it.unit + '</span>';
+      html += '  </div>';
+    }
+    html += '</div>';
+  });
+
+  tabContent.innerHTML = html;
 }
 
-function removeMetric(id) {
-  metrics = metrics.filter(function(m) { return m.id !== id; });
-  renderMetrics();
-  renderMetricPicker();
-  showToast('已删除指标', 'info');
+function getSelectedMetrics() {
+  return Object.keys(metricRanges).map(function(key) {
+    var def = findMetricDef(key);
+    return { key: key, name: def ? def.name : key, unit: def ? def.unit : '', min: metricRanges[key].min, max: metricRanges[key].max };
+  });
 }
 
 // ===================== TOAST =====================
@@ -1481,8 +1569,9 @@ function cancelForm() {
     document.querySelector('input[name="channel"][value="guangdiantong"]').checked = true;
     adStatusState = 'repeat';
     rejectTypeState = [];
-    metrics = [];
-    metricCounter = 0;
+    metricRanges = {};
+    metricTab = 'ad';
+    provinceSel = { operator: '', province: '' };
     monitorEnabled = { adStatus: false, materialTag: false, metrics: true };
     xValueState = 1;
     refreshAll();
@@ -1491,6 +1580,9 @@ function cancelForm() {
     document.getElementById('createTime').value = '';
     document.getElementById('scheduleTime').value = '02:00';
     document.getElementById('xValue').value = '1';
+    // 重置监控纬度 / 操作纬度为默认
+    document.querySelector('input[name="monitorDim"][value="ad"]').checked = true;
+    updateOpDimByMonitorDim();
     selectedAccounts = [];
     renderAccountTable();
     var sw = document.getElementById('loopSwitch');
@@ -1499,7 +1591,7 @@ function cancelForm() {
     document.getElementById('loopLabel').textContent = '未开启';
     document.getElementById('loopHint').textContent = '开启后按设定天数循环执行，关闭则仅执行一次';
     document.getElementById('loopDays').value = 1;
-    renderMetrics();
+    renderMetricTab();
   }
 }
 
@@ -1557,9 +1649,15 @@ function saveStrategy() {
   // 数据指标 — only when enabled
   if (monitorEnabled.metrics) {
     var timeRange = getSelectedTimeRangeLabel();
-    if (!timeRange) { showToast('请选择时间范围', 'error'); return; }
+    if (!timeRange) { showToast('请选择数据指标的时间范围', 'error'); return; }
     var activeMetrics = getActiveMetrics();
-    if (activeMetrics.length === 0) { showToast('请至少添加并启用一个数据指标', 'error'); return; }
+    if (activeMetrics.length === 0) { showToast('请至少配置一个数据指标（广告 / 业务 / 省份运营商）', 'error'); return; }
+    // 省份运营商指标需先选择运营商 + 省份
+    var provinceKeys = metricDefs.province.items.map(function(it) { return it.key; });
+    var hasProvince = activeMetrics.some(function(m) { return provinceKeys.indexOf(m.key) >= 0; });
+    if (hasProvince && (!provinceSel.operator || !provinceSel.province)) {
+      showToast('省份运营商指标需先选择运营商和省份', 'error'); return;
+    }
     monitorData.timeRange = timeRange;
     monitorData.metrics = activeMetrics;
   }
@@ -1575,7 +1673,8 @@ function saveStrategy() {
   var data = {
     name: name,
     channel: channelName,
-    opDim: dimLabels[opDim] || opDim,
+    monitorDim: monitorDimOptions[getMonitorDim()] || getMonitorDim(),
+    opDim: opDimOptions[opDim] || opDim,
     accounts: selectedAccounts,
     projectStatus: projectStatusText,
     adStatus: monitorData.adStatus || null,
@@ -1595,7 +1694,7 @@ function saveStrategy() {
 renderAccountTable();
 renderProjectStatus('guangdiantong');
 refreshAll();
-renderMetrics();
+renderMetricTab();
 
 document.getElementById('accountModal').addEventListener('click', function(e) {
   if (e.target === this) closeAccountModal();
