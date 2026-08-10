@@ -535,6 +535,47 @@
   .metric-picker-item.disabled { color: var(--text-placeholder); cursor: not-allowed; }
   .metric-picker-item.disabled:hover { background: none; color: var(--text-placeholder); }
   .metric-picker-item .added-tag { font-size: 12px; color: var(--success); }
+  .metric-picker-cat { font-size: 12px; font-weight: 600; color: var(--text-muted); padding: 8px 14px 2px; letter-spacing: 0.5px; }
+
+  /* Multi monitoring config cards */
+  .monitor-config-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    background: #fcfdff;
+    box-shadow: var(--shadow-sm);
+  }
+  .monitor-config-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .monitor-config-card-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 700; color: var(--text);
+  }
+  .monitor-config-card-title::before {
+    content: ""; width: 3px; height: 14px; background: var(--primary); border-radius: 2px;
+  }
+  .mc-group { margin-bottom: 14px; }
+  .mc-group:last-of-type { margin-bottom: 4px; }
+  .mc-group-label {
+    font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .metric-remove {
+    font-size: 13px; color: var(--danger); cursor: pointer;
+    padding: 2px 8px; border-radius: var(--radius-sm);
+    transition: all var(--transition); white-space: nowrap;
+  }
+  .metric-remove:hover { background: #fff1f0; }
+  .metric-add-wrap { margin-top: 10px; }
+  .btn-dashed {
+    width: 100%; justify-content: center; border-style: dashed;
+    border-color: var(--primary); color: var(--primary);
+    background: var(--primary-bg); margin-top: 4px;
+  }
+  .btn-dashed:hover { background: var(--primary-light); }
 
   /* ==================== HINT ICON ==================== */
   .hint-icon {
@@ -1087,27 +1128,7 @@ function getSelectedMaterialTags() {
   return Array.from(checked).map(function(cb) { return cb.value; });
 }
 
-function getActiveMetrics() { return getSelectedMetrics(); }
-
-function getSelectedTimeRangeLabel() {
-  var chip = document.querySelector('.time-range-chip.active');
-  if (!chip) return '';
-  var label = chip.textContent;
-  if (chip.dataset.hasx === 'true') {
-    var x = document.getElementById('xValue').value || 1;
-    return label.replace('x', x);
-  }
-  return label;
-}
-
-// ===================== CHIP (TIME RANGE) =====================
-function selectTimeRangeChip(chipEl) {
-  document.querySelectorAll('.time-range-chip').forEach(function(c) { c.classList.remove('active'); });
-  chipEl.classList.add('active');
-  var hasX = chipEl.dataset.hasx === 'true';
-  var xBelow = document.getElementById('xInputBelow');
-  if (xBelow) xBelow.style.display = hasX ? '' : 'none';
-}
+// (obsolete metric helpers removed — replaced by multi-config model below)
 
 // ===================== 监控纬度 → 操作纬度 联动 =====================
 function updateOpDimByMonitorDim() {
@@ -1238,46 +1259,20 @@ function refreshMonitorConfig() {
     html += '</div>'; // sub-section
   }
 
-  // --- 数据指标配置 (always, when 投放指标) ---
-  var timeOptions = (monitorTimeRanges[channel] && monitorTimeRanges[channel][opDim]) || [];
+  // --- 数据指标配置 (投放指标下，支持多套监控配置) ---
   html += '<div class="sub-section">';
   html += blockHeader('数据指标配置', 'metrics');
   html += '<div class="sub-section-body" id="body_metrics" style="' + (monitorEnabled.metrics ? '' : 'display:none') + '">';
 
-  // Time range chips（数据指标均需配置时间范围）
-  html += '  <div style="margin-bottom:16px">';
-  html += '    <div style="display:flex;align-items:center;margin-bottom:8px">';
-  html += '      <span style="font-size:14px;font-weight:600;color:var(--text)">时间范围</span>';
-  html += '      <span class="hint-icon" data-tip="数据指标均需配置时间范围，作为判断阈值的时间窗口">?</span>';
-  html += '    </div>';
-  if (timeOptions.length > 0) {
-    html += '    <div class="time-range-chips">';
-    timeOptions.forEach(function(opt, idx) {
-      html += '<span class="time-range-chip' + (idx === 0 ? ' active' : '') + '" data-hasx="' + opt.hasX + '" onclick="selectTimeRangeChip(this)">' + opt.label + '</span>';
-    });
-    html += '    </div>';
-    html += '    <div class="x-input-below" id="xInputBelow" style="display:' + (timeOptions[0].hasX ? '' : 'none') + '">';
-    html += '      <span style="color:var(--text-secondary);font-size:14px">输入小时数：</span>';
-    html += '      <input type="number" class="x-val" id="xValue" value="' + xValueState + '" min="1" max="9999" oninput="xValueState=parseInt(this.value)||1">';
-    html += '    </div>';
-  } else {
-    html += '    <div class="metric-empty">当前渠道 / 纬度暂无可用的数据指标时间范围</div>';
-  }
-  html += '  </div>';
-
-  // 指标分类 Tab
-  html += '  <div class="metric-tabs">';
-  html += '    <div class="metric-tab' + (metricTab === 'ad' ? ' active' : '') + '" data-type="ad" onclick="switchMetricTab(\'ad\')">广告指标</div>';
-  html += '    <div class="metric-tab' + (metricTab === 'business' ? ' active' : '') + '" data-type="business" onclick="switchMetricTab(\'business\')">业务指标</div>';
-  html += '    <div class="metric-tab' + (metricTab === 'province' ? ' active' : '') + '" data-type="province" onclick="switchMetricTab(\'province\')">省份运营商指标</div>';
-  html += '  </div>';
-  html += '  <div id="metricTabContent"></div>';
+  html += '  <div class="metric-gate-hint" style="margin-bottom:14px">可添加多套监控配置，每套含独立的时间范围与一个或多个指标阈值；点击下方"添加指标"，从全部指标中按需选择。</div>';
+  html += '  <div id="monitorConfigList"></div>';
+  html += '  <button class="btn btn-dashed" onclick="addMonitorConfig()">+ 添加监控配置</button>';
 
   html += '</div>'; // sub-section-body
   html += '</div>'; // sub-section
 
   container.innerHTML = html;
-  renderMetricTab();
+  renderMonitorConfigList();
 }
 
 // ===================== PROJECT STATUS RENDER =====================
@@ -1308,14 +1303,13 @@ function onAdStatusChange() {
   }
 }
 
-// ===================== METRICS — 广告/业务/省份运营商指标 =====================
+// ===================== METRICS — 多套监控配置 =====================
 var adStatusState = 'repeat';
 var rejectTypeState = [];
 // 监控配置各子块开关状态（至少开启一个；默认数据指标开启）
 var monitorEnabled = { adStatus: false, materialTag: false, metrics: true };
-var xValueState = 1;
 
-// 数据指标类型定义
+// 数据指标类型定义（用于"添加指标"选择器分组）
 var metricDefs = {
   ad: {
     title: '广告指标',
@@ -1342,13 +1336,6 @@ var metricDefs = {
   }
 };
 
-// 已选指标及其区间：key -> {min, max}
-var metricRanges = {};
-// 当前显示的指标分类 tab
-var metricTab = 'ad';
-// 省份运营商选择
-var provinceSel = { operator: '', province: '' };
-
 var operatorOptions = ['中国移动', '中国联通', '中国电信'];
 var provinceOptions = ['北京', '上海', '广东', '江苏', '浙江', '四川', '湖北', '湖南', '山东', '河南', '福建', '安徽', '江西', '陕西', '辽宁', '重庆', '天津', '河北', '广西', '云南', '贵州', '山西', '吉林', '黑龙江', '甘肃', '海南', '内蒙古', '宁夏', '青海', '新疆', '西藏'];
 
@@ -1360,83 +1347,211 @@ function findMetricDef(key) {
   return null;
 }
 
-function toggleMetric(key, checked) {
-  if (checked) {
-    if (!(key in metricRanges)) metricRanges[key] = { min: 0, max: 9999999 };
-  } else {
-    delete metricRanges[key];
-  }
-  renderMetricTab();
+// ===================== 多套监控配置（数据指标） =====================
+// 每套监控配置：{ id, timeRangeIndex, x, metrics:{key:{min,max}}, operator, province }
+var monitorConfigs = [];
+var configSeq = 0;
+var activePickerConfigId = null;
+
+function getTimeOptions() {
+  var channel = getChannel();
+  var opDim = getOpDim();
+  return (monitorTimeRanges[channel] && monitorTimeRanges[channel][opDim]) || [];
 }
 
-function updateMetricRange(key, field, val) {
-  if (!(key in metricRanges)) metricRanges[key] = { min: 0, max: 9999999 };
+function getConfigById(id) {
+  for (var i = 0; i < monitorConfigs.length; i++) {
+    if (monitorConfigs[i].id === id) return monitorConfigs[i];
+  }
+  return null;
+}
+
+function addMonitorConfig() {
+  configSeq++;
+  monitorConfigs.push({
+    id: 'cfg_' + configSeq,
+    timeRangeIndex: 0,
+    x: 1,
+    metrics: {},
+    operator: '',
+    province: ''
+  });
+  renderMonitorConfigList();
+}
+
+function removeMonitorConfig(id) {
+  monitorConfigs = monitorConfigs.filter(function(c) { return c.id !== id; });
+  renderMonitorConfigList();
+}
+
+function selectConfigTimeRange(id, oi) {
+  var cfg = getConfigById(id);
+  if (!cfg) return;
+  cfg.timeRangeIndex = oi;
+  renderMonitorConfigList();
+}
+
+function updateConfigX(id, val) {
+  var cfg = getConfigById(id);
+  if (!cfg) return;
+  cfg.x = Math.max(1, parseInt(val) || 1);
+}
+
+function updateConfigProvince(id, field, val) {
+  var cfg = getConfigById(id);
+  if (!cfg) return;
+  cfg[field] = val;
+  renderMonitorConfigList();
+}
+
+function updateConfigMetricRange(id, key, field, val) {
+  var cfg = getConfigById(id);
+  if (!cfg || !(key in cfg.metrics)) return;
   var v = parseInt(val);
   if (isNaN(v)) v = field === 'min' ? 0 : 9999999;
-  metricRanges[key][field] = Math.max(0, Math.min(9999999, v));
+  cfg.metrics[key][field] = Math.max(0, Math.min(9999999, v));
 }
 
-function switchMetricTab(type) {
-  metricTab = type;
-  renderMetricTab();
+function closeMetricPicker() {
+  var picker = document.getElementById('metricPicker');
+  if (picker) picker.style.display = 'none';
+  activePickerConfigId = null;
+}
+
+function addMetricToConfig(id, key) {
+  var cfg = getConfigById(id);
+  if (!cfg) return;
+  if (!(key in cfg.metrics)) cfg.metrics[key] = { min: 0, max: 9999999 };
+  closeMetricPicker();
+  renderMonitorConfigList();
+}
+
+function removeMetricFromConfig(id, key) {
+  var cfg = getConfigById(id);
+  if (!cfg) return;
+  delete cfg.metrics[key];
+  renderMonitorConfigList();
+}
+
+function openMetricPicker(id, btnEl, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  var picker = document.getElementById('metricPicker');
+  if (!picker) {
+    picker = document.createElement('div');
+    picker.id = 'metricPicker';
+    picker.className = 'metric-picker';
+    document.body.appendChild(picker);
+  }
+  if (picker.style.display === 'block' && activePickerConfigId === id) {
+    picker.style.display = 'none';
+    activePickerConfigId = null;
+    return;
+  }
+  activePickerConfigId = id;
+  var cfg = getConfigById(id);
+  var html = '';
+  for (var type in metricDefs) {
+    var def = metricDefs[type];
+    html += '<div class="metric-picker-cat">' + def.title + '</div>';
+    def.items.forEach(function(it) {
+      var selected = cfg && (it.key in cfg.metrics);
+      var disabled = false;
+      if (type === 'province') {
+        var pKeys = def.items.map(function(p) { return p.key; });
+        var count = Object.keys(cfg.metrics).filter(function(k) { return pKeys.indexOf(k) >= 0; }).length;
+        if (count >= (def.maxSelect || 99) && !selected) disabled = true;
+      }
+      var attr = disabled ? '' : ' onclick="addMetricToConfig(\'' + id + '\', \'' + it.key + '\')"';
+      html += '<div class="metric-picker-item' + (disabled ? ' disabled' : '') + '"' + attr + '>' + it.name + (selected ? ' <span class="added-tag">已添加</span>' : '') + '</div>';
+    });
+  }
+  picker.innerHTML = html;
+  picker.style.display = 'block';
+  picker.style.position = 'fixed';
+  var rect = btnEl.getBoundingClientRect();
+  picker.style.top = (rect.bottom + 6) + 'px';
+  picker.style.left = rect.left + 'px';
+}
+
+function renderMonitorConfigList() {
+  var listEl = document.getElementById('monitorConfigList');
+  if (!listEl) return;
+  if (monitorConfigs.length === 0) {
+    listEl.innerHTML = '<div class="metric-empty" style="padding:10px 0">暂无监控配置，点击下方"添加监控配置"开始配置数据指标</div>';
+    return;
+  }
+  var timeOptions = getTimeOptions();
+  var provinceKeys = metricDefs.province.items.map(function(it) { return it.key; });
+  var html = '';
+  monitorConfigs.forEach(function(cfg, idx) {
+    if (cfg.timeRangeIndex >= timeOptions.length) cfg.timeRangeIndex = 0;
+    var curOpt = timeOptions[cfg.timeRangeIndex];
+    html += '<div class="monitor-config-card">';
+    html += '  <div class="monitor-config-card-header">';
+    html += '    <div class="monitor-config-card-title">监控配置 ' + (idx + 1) + '</div>';
+    html += '    <span class="delete-link" onclick="removeMonitorConfig(\'' + cfg.id + '\')">删除</span>';
+    html += '  </div>';
+
+    html += '  <div class="mc-group">';
+    html += '    <div class="mc-group-label">时间范围</div>';
+    if (timeOptions.length > 0) {
+      html += '    <div class="time-range-chips">';
+      timeOptions.forEach(function(opt, oi) {
+        html += '<span class="time-range-chip' + (oi === cfg.timeRangeIndex ? ' active' : '') + '" data-hasx="' + opt.hasX + '" onclick="selectConfigTimeRange(\'' + cfg.id + '\', ' + oi + ')">' + opt.label + '</span>';
+      });
+      html += '    </div>';
+      html += '    <div class="x-input-below" style="display:' + (curOpt && curOpt.hasX ? '' : 'none') + '">';
+      html += '      <span style="color:var(--text-secondary);font-size:14px">输入小时数：</span>';
+      html += '      <input type="number" class="x-val" value="' + cfg.x + '" min="1" max="9999" oninput="updateConfigX(\'' + cfg.id + '\', this.value)">';
+      html += '    </div>';
+    } else {
+      html += '    <div class="metric-empty">当前渠道 / 纬度暂无可用的数据指标时间范围</div>';
+    }
+    html += '  </div>';
+
+    var hasProvince = Object.keys(cfg.metrics).some(function(k) { return provinceKeys.indexOf(k) >= 0; });
+    if (hasProvince) {
+      html += '  <div class="mc-group">';
+      html += '    <div class="mc-group-label">省份运营商范围</div>';
+      html += '    <div style="display:flex;gap:12px;flex-wrap:wrap">';
+      html += '      <div class="select-wrapper"><select class="select" style="width:160px" onchange="updateConfigProvince(\'' + cfg.id + '\', \'operator\', this.value)"><option value="">选择运营商</option>' + operatorOptions.map(function(o) { return '<option' + (cfg.operator === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></div>';
+      html += '      <div class="select-wrapper"><select class="select" style="width:160px" onchange="updateConfigProvince(\'' + cfg.id + '\', \'province\', this.value)"><option value="">选择省份</option>' + provinceOptions.map(function(p) { return '<option' + (cfg.province === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select></div>';
+      html += '    </div>';
+      html += '  </div>';
+    }
+
+    html += '  <div class="mc-group">';
+    html += '    <div class="mc-group-label">指标与阈值</div>';
+    var keys = Object.keys(cfg.metrics);
+    if (keys.length === 0) {
+      html += '    <div class="metric-empty">尚未添加指标，点击下方"添加指标"</div>';
+    } else {
+      keys.forEach(function(key) {
+        var def = findMetricDef(key);
+        var r = cfg.metrics[key];
+        html += '    <div class="metric-row">';
+        html += '      <span class="metric-name">' + (def ? def.name : key) + '</span>';
+        html += '      <div class="metric-range">';
+        html += '        <span class="metric-unit">区间：</span>';
+        html += '        <input type="number" min="0" max="9999999" value="' + r.min + '" placeholder="最小值" onchange="updateConfigMetricRange(\'' + cfg.id + '\', \'' + key + '\', \'min\', this.value)">';
+        html += '        <span class="metric-tilde">~</span>';
+        html += '        <input type="number" min="0" max="9999999" value="' + r.max + '" placeholder="最大值" onchange="updateConfigMetricRange(\'' + cfg.id + '\', \'' + key + '\', \'max\', this.value)">';
+        html += '        <span class="metric-unit">' + (def ? def.unit : '') + '</span>';
+        html += '      </div>';
+        html += '      <span class="metric-remove" onclick="removeMetricFromConfig(\'' + cfg.id + '\', \'' + key + '\')">删除</span>';
+        html += '    </div>';
+      });
+    }
+    html += '  </div>';
+
+    html += '  <div class="metric-add-wrap"><span class="link-btn" onclick="openMetricPicker(\'' + cfg.id + '\', this, event)">+ 添加指标</span></div>';
+    html += '</div>';
+  });
+  listEl.innerHTML = html;
 }
 
 function onMonitorTypeChange() {
   refreshMonitorConfig();
-}
-
-function renderMetricTab() {
-  var tabContent = document.getElementById('metricTabContent');
-  if (!tabContent) return;
-
-  // 更新 tab 高亮
-  document.querySelectorAll('.metric-tab').forEach(function(t) {
-    t.classList.toggle('active', t.dataset.type === metricTab);
-  });
-
-  var def = metricDefs[metricTab];
-  var html = '<div class="metric-cat-title">' + def.title + '</div>';
-
-  // 省份运营商指标：需先选运营商 + 省份
-  if (metricTab === 'province') {
-    var gateOk = provinceSel.operator && provinceSel.province;
-    html += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">';
-    html += '  <div class="select-wrapper"><select class="select" style="width:160px" onchange="provinceSel.operator=this.value;renderMetricTab()"><option value="">选择运营商</option>' +
-      operatorOptions.map(function(o) { return '<option' + (provinceSel.operator === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></div>';
-    html += '  <div class="select-wrapper"><select class="select" style="width:160px" onchange="provinceSel.province=this.value;renderMetricTab()"><option value="">选择省份</option>' +
-      provinceOptions.map(function(p) { return '<option' + (provinceSel.province === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select></div>';
-    html += '</div>';
-    if (!gateOk) {
-      html += '<div class="metric-gate-hint">请先选择运营商和省份，再配置指标（最多 3 个）</div>';
-    }
-  }
-
-  def.items.forEach(function(it) {
-    var selected = (it.key in metricRanges);
-    var disabled = (metricTab === 'province' && !(provinceSel.operator && provinceSel.province));
-    html += '<div class="metric-row' + (disabled ? ' disabled' : '') + '">';
-    html += '  <label class="checkbox-item"><input type="checkbox"' + (selected ? ' checked' : '') + (disabled ? ' disabled' : '') + ' onchange="toggleMetric(\'' + it.key + '\', this.checked)">' + it.name + '</label>';
-    if (selected) {
-      var r = metricRanges[it.key];
-      html += '  <div class="metric-range">';
-      html += '    <span class="metric-unit">区间：</span>';
-      html += '    <input type="number" min="0" max="9999999" value="' + r.min + '" placeholder="最小值" onchange="updateMetricRange(\'' + it.key + '\', \'min\', this.value)">';
-      html += '    <span class="metric-tilde">~</span>';
-      html += '    <input type="number" min="0" max="9999999" value="' + r.max + '" placeholder="最大值" onchange="updateMetricRange(\'' + it.key + '\', \'max\', this.value)">';
-      html += '    <span class="metric-unit">' + it.unit + '</span>';
-      html += '  </div>';
-    }
-    html += '</div>';
-  });
-
-  tabContent.innerHTML = html;
-}
-
-function getSelectedMetrics() {
-  return Object.keys(metricRanges).map(function(key) {
-    var def = findMetricDef(key);
-    return { key: key, name: def ? def.name : key, unit: def ? def.unit : '', min: metricRanges[key].min, max: metricRanges[key].max };
-  });
 }
 
 // ===================== TOAST =====================
@@ -1569,20 +1684,18 @@ function cancelForm() {
     document.querySelector('input[name="channel"][value="guangdiantong"]').checked = true;
     adStatusState = 'repeat';
     rejectTypeState = [];
-    metricRanges = {};
-    metricTab = 'ad';
-    provinceSel = { operator: '', province: '' };
+    monitorConfigs = [];
     monitorEnabled = { adStatus: false, materialTag: false, metrics: true };
-    xValueState = 1;
+    var mdRadio = document.querySelector('input[name="monitorDim"][value="ad"]');
+    if (mdRadio) mdRadio.checked = true;
     refreshAll();
     var rt = document.getElementById('rejectTypeWrapper');
     if (rt) rt.style.display = 'none';
     document.getElementById('createTime').value = '';
     document.getElementById('scheduleTime').value = '02:00';
-    document.getElementById('xValue').value = '1';
-    // 重置监控纬度 / 操作纬度为默认
-    document.querySelector('input[name="monitorDim"][value="ad"]').checked = true;
-    updateOpDimByMonitorDim();
+    // 重置监控纬度 / 操作纬度为默认，并重置为一套空的监控配置
+    monitorConfigs = [];
+    addMonitorConfig();
     selectedAccounts = [];
     renderAccountTable();
     var sw = document.getElementById('loopSwitch');
@@ -1591,7 +1704,6 @@ function cancelForm() {
     document.getElementById('loopLabel').textContent = '未开启';
     document.getElementById('loopHint').textContent = '开启后按设定天数循环执行，关闭则仅执行一次';
     document.getElementById('loopDays').value = 1;
-    renderMetricTab();
   }
 }
 
@@ -1646,20 +1758,26 @@ function saveStrategy() {
     monitorData.deleteScope = dsRadio2 ? dsRadio2.value : 'ad_only';
   }
 
-  // 数据指标 — only when enabled
+  // 数据指标 — 多套监控配置
   if (monitorEnabled.metrics) {
-    var timeRange = getSelectedTimeRangeLabel();
-    if (!timeRange) { showToast('请选择数据指标的时间范围', 'error'); return; }
-    var activeMetrics = getActiveMetrics();
-    if (activeMetrics.length === 0) { showToast('请至少配置一个数据指标（广告 / 业务 / 省份运营商）', 'error'); return; }
-    // 省份运营商指标需先选择运营商 + 省份
-    var provinceKeys = metricDefs.province.items.map(function(it) { return it.key; });
-    var hasProvince = activeMetrics.some(function(m) { return provinceKeys.indexOf(m.key) >= 0; });
-    if (hasProvince && (!provinceSel.operator || !provinceSel.province)) {
-      showToast('省份运营商指标需先选择运营商和省份', 'error'); return;
+    if (monitorConfigs.length === 0) { showToast('请至少添加一套监控配置', 'error'); return; }
+    var timeOptionsAll = getTimeOptions();
+    if (timeOptionsAll.length === 0) { showToast('当前渠道 / 纬度暂无可用的数据指标时间范围', 'error'); return; }
+    var configSummaries = [];
+    var provinceKeysAll = metricDefs.province.items.map(function(it) { return it.key; });
+    for (var ci = 0; ci < monitorConfigs.length; ci++) {
+      var cfg = monitorConfigs[ci];
+      var tr = timeOptionsAll[cfg.timeRangeIndex];
+      if (!tr) { showToast('监控配置 ' + (ci + 1) + ' 时间范围无效', 'error'); return; }
+      var cfgTime = tr.label.replace('x', cfg.x);
+      var mkeys = Object.keys(cfg.metrics);
+      if (mkeys.length === 0) { showToast('监控配置 ' + (ci + 1) + ' 请至少添加一个指标', 'error'); return; }
+      var hasProv = mkeys.some(function(k) { return provinceKeysAll.indexOf(k) >= 0; });
+      if (hasProv && (!cfg.operator || !cfg.province)) { showToast('监控配置 ' + (ci + 1) + ' 的省份运营商指标需选择运营商和省份', 'error'); return; }
+      var mArr = mkeys.map(function(k) { var def = findMetricDef(k); return { key: k, name: def ? def.name : k, unit: def ? def.unit : '', min: cfg.metrics[k].min, max: cfg.metrics[k].max }; });
+      configSummaries.push({ timeRange: cfgTime, metrics: mArr, operator: cfg.operator, province: cfg.province });
     }
-    monitorData.timeRange = timeRange;
-    monitorData.metrics = activeMetrics;
+    monitorData.metricConfigs = configSummaries;
   }
 
   // Build summary
@@ -1694,7 +1812,8 @@ function saveStrategy() {
 renderAccountTable();
 renderProjectStatus('guangdiantong');
 refreshAll();
-renderMetricTab();
+monitorConfigs = [];
+addMonitorConfig();
 
 document.getElementById('accountModal').addEventListener('click', function(e) {
   if (e.target === this) closeAccountModal();
@@ -1704,8 +1823,9 @@ document.getElementById('accountModal').addEventListener('click', function(e) {
 document.addEventListener('click', function(e) {
   var picker = document.getElementById('metricPicker');
   if (!picker) return;
-  if (picker.style.display !== 'none' && !picker.parentElement.contains(e.target)) {
+  if (picker.style.display === 'block' && !picker.contains(e.target)) {
     picker.style.display = 'none';
+    activePickerConfigId = null;
   }
 });
 </script>
